@@ -23,3 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 
+# Turborepo 缓存
+.turbo/*
