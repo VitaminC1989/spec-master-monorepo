@@ -7,3 +7,35 @@ datasource db {
 generator client {
   provider = "prisma-client-js"
 }
+
+// 3. 用户模型
+model User {
+  id        String   @id @default(uuid()) // 使用 UUID 作为主键，更安全
+  email     String   @unique // 邮箱必须唯一
+  name      String? // 名字可选
+  createdAt DateTime @default(now()) // 注册时间自动生成
+  updatedAt DateTime @updatedAt // 更新时间自动变
+
+  // 关系：一个用户可以有多张规格单
+  specs SpecSheet[]
+}
+
+// 4. 规格单模型 (核心业务)
+model SpecSheet {
+  id    Int    @id @default(autoincrement()) // 规格单用数字ID，方便以后生成编号
+  title String // 标题，例如 "2026春季新款卫衣"
+
+  // 🔥 重点：这里使用 JSON 类型！
+  // 你的尺码表、面料信息、工艺单细节全部塞在这里
+  // 不需要为 "衣长"、"袖长" 单独建列，极大增加了灵活性
+  content Json
+
+  status String @default("DRAFT") // 状态：DRAFT(草稿), PUBLISHED(已发布)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关系：这张单子属于哪个用户
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
