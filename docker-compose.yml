@@ -1,0 +1,17 @@
+services:
+  # 数据库服务
+  db:
+    image: postgres:16-alpine # 使用 16 版本，体积小且稳
+    container_name: spec-postgres
+    restart: always
+    ports:
+      - "5432:5432" # 开放端口给本地电脑
+    environment:
+      POSTGRES_USER: admin # 账号
+      POSTGRES_PASSWORD: 123 # 密码 (本地开发简单点就行)
+      POSTGRES_DB: specmaster # 数据库名
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # 数据持久化 (重启容器数据不丢)
+
+volumes:
+  postgres_data: # 声明数据卷
