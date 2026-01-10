@@ -1,14 +1,9 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
-}
-
+// 1. 告诉 Prisma 我们要连 PostgreSQL
 datasource db {
   provider = "postgresql"
+}
+
+// 2. 告诉 Prisma 生成 TypeScript 客户端代码
+generator client {
+  provider = "prisma-client-js"
 }
