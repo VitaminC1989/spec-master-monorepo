@@ -41,6 +41,8 @@ npx prisma db push         # Push schema changes (prototype mode)
 
 **Database Connection**: PostgreSQL via Docker Compose (see Infrastructure section)
 
+**API Documentation**: Swagger UI available at `http://localhost:3000/docs` when API server is running
+
 ### Build & Test
 ```bash
 # From root (uses Turborepo)
@@ -52,6 +54,7 @@ turbo run test             # Run all tests
 cd apps/api
 pnpm build                 # NestJS build → dist/
 pnpm test                  # Jest unit tests
+pnpm test:watch            # Jest in watch mode
 pnpm test:e2e              # E2E tests
 pnpm test:cov              # Coverage report
 
@@ -97,20 +100,20 @@ PORT=3000                  # API server port
 ```
 apps/api/
   prisma/
-    schema.prisma          - Database schema
+    schema.prisma          - Database schema (currently minimal - no models defined yet)
     migrations/            - Migration history
   src/
-    main.ts                - NestJS bootstrap
+    main.ts                - NestJS bootstrap + Swagger setup
     app.module.ts          - Root module
     app.controller.ts      - Root controller
-  prisma.config.ts         - Prisma configuration
+  prisma.config.ts         - Prisma 7 configuration (schema path, migrations, datasource)
 ```
 
-**Prisma Client**: Generated to `apps/api/generated/prisma/` (custom output path)
+**Prisma Client**: Generated using standard Prisma output (node_modules/.prisma/client)
 
 **Key Dependencies**:
 - `@nestjs/config` - Environment configuration
-- `@prisma/client` - Database ORM
+- `@prisma/client` + `@prisma/adapter-pg` - Database ORM with PostgreSQL adapter
 - `@aws-sdk/client-s3` - S3 file uploads
 
 ### Frontend (apps/web)
@@ -154,7 +157,7 @@ StyleDetailPage (L1: 款号)
 
 4. Implement service with Prisma Client:
    ```typescript
-   import { PrismaClient } from '../../generated/prisma';
+   import { PrismaClient } from '@prisma/client';
    ```
 
 5. Add Swagger decorators for API docs
@@ -180,14 +183,14 @@ Defined in `turbo.json`:
 
 ## Important Notes
 
-- **Port Conflict**: Both apps default to port 3000. When running simultaneously, configure one to use a different port.
-- **Prisma Client Path**: Custom output path `generated/prisma/` - import from `../../generated/prisma` in services
+- **Port Conflict**: Both apps default to port 3000. Web app proxy is configured to forward `/api` requests to port 3001.
+- **Prisma Schema**: Currently minimal - only datasource and generator defined. Models need to be added for the 4-level data structure.
 - **Migration Strategy**: Currently using `prisma migrate dev`. For production, use `prisma migrate deploy`
 - **Database Reset**: `docker-compose down -v` deletes all data (removes volume)
 - **Frontend Persistence**: Currently client-side only (Dexie). Backend integration will replace mock provider.
 
-## Git Workflow
+## Current Development Status
 
-- **Branch**: `dev` (no main branch configured yet)
-- **Recent Work**: Prisma integration, PostgreSQL setup, Docker configuration
-- **Modified Files**: `apps/api/package.json`, `pnpm-lock.yaml` (uncommitted Prisma changes)
+- **Backend**: Initial setup complete with Prisma 7, Swagger docs, and PostgreSQL integration
+- **Frontend**: Fully functional with mock data provider and IndexedDB persistence
+- **Next Steps**: Define Prisma models for the 4-level hierarchy (Style → ColorVariant → BOMItem → SpecDetail) and implement REST endpoints
