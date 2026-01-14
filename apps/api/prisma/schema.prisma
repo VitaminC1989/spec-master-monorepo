@@ -1,9 +1,388 @@
-// 1. 告诉 Prisma 我们要连 PostgreSQL
+// =============================================================================
+// SpecMaster - Prisma Schema
+// Database Architecture for Garment Specification Management System
+// Version: 1.0.0
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Database Configuration
+// -----------------------------------------------------------------------------
 datasource db {
   provider = "postgresql"
 }
 
-// 2. 告诉 Prisma 生成 TypeScript 客户端代码
 generator client {
   provider = "prisma-client-js"
 }
+
+// =============================================================================
+// CORE BUSINESS ENTITIES (4-Level Nested Structure)
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// L1: Style (款号/款式) - Top Level Entity
+// -----------------------------------------------------------------------------
+/// 款号是整个数据结构的根容器，承载所有颜色版本共用的信息
+/// 业务规则：
+/// - style_no 全局唯一，用于快速查找和标识
+/// - 可选关联客户（customer_id）
+/// - 删除款号时级联删除所有子数据（颜色版本 -> 配料 -> 规格）
+model Style {
+  id Int @id @default(autoincrement())
+
+  // 业务字段
+  styleNo    String  @unique @map("style_no") @db.VarChar(20) // 款号（唯一标识）
+  styleName  String? @map("style_name") @db.VarChar(100) // 款式名称
+  publicNote String? @map("public_note") @db.Text // 公共备注（所有颜色共用）
+
+  // 客户关联
+  customerId   Int?      @map("customer_id")
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName String?   @map("customer_name") @db.VarChar(100) // 冗余字段，方便查询显示
+
+  // 审计字段
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdBy Int?      @map("created_by") // 创建人ID（预留用户系统）
+  updatedBy Int?      @map("updated_by") // 修改人ID
+  deletedAt DateTime? @map("deleted_at") // 软删除时间戳
+
+  // 关联关系
+  colorVariants ColorVariant[]
+
+  @@index([customerId])
+  @@index([styleNo])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("styles")
+}
+
+// -----------------------------------------------------------------------------
+// L2: ColorVariant (颜色版本) - Style's Children
+// -----------------------------------------------------------------------------
+/// 颜色版本是配料表(BOM)的挂载点
+/// 同一款号下可以有多个颜色变体（如：灰色、粉色、天蓝色）
+/// 业务规则：
+/// - 每个颜色版本独立管理配料清单
+/// - 支持深度克隆（复制整个颜色版本含所有配料和规格）
+/// - 删除时级联删除所有配料和规格
+model ColorVariant {
+  id Int @id @default(autoincrement())
+
+  // 外键关联
+  styleId Int   @map("style_id")
+  style   Style @relation(fields: [styleId], references: [id], onDelete: Cascade)
+
+  // 业务字段
+  colorName      String  @map("color_name") @db.VarChar(50) // 颜色名称
+  sampleImageUrl String? @map("sample_image_url") @db.VarChar(500) // 样衣图片URL
+  sizeRange      String? @map("size_range") @db.VarChar(100) // 尺码范围说明（如：S/M/L/XL）
+
+  // 排序字段
+  sortOrder Int @default(0) @map("sort_order") // 显示顺序
+
+  // 审计字段
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdBy Int?      @map("created_by")
+  updatedBy Int?      @map("updated_by")
+  deletedAt DateTime? @map("deleted_at")
+
+  // 克隆追踪（可选，用于记录克隆来源）
+  clonedFromId Int? @map("cloned_from_id")
+
+  // 关联关系
+  bomItems BOMItem[]
+
+  @@unique([styleId, colorName]) // 同一款号下颜色名称唯一
+  @@index([styleId])
+  @@index([deletedAt])
+  @@map("color_variants")
+}
+
+// -----------------------------------------------------------------------------
+// L3: BOMItem (配料明细/物料清单项) - ColorVariant's Children
+// -----------------------------------------------------------------------------
+/// 配料明细是用户主要录入数据的层级
+/// 记录某个颜色版本需要用到的具体辅料信息
+/// 业务规则：
+/// - 每条配料可以有多条规格明细（用于区分不同尺码）
+/// - 单耗(usage)表示生产一件衣服的消耗量
+/// - 支持辅料颜色的文字描述和图片色卡
+model BOMItem {
+  id Int @id @default(autoincrement())
+
+  // 外键关联
+  variantId Int          @map("variant_id")
+  variant   ColorVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  // 辅料基本信息
+  materialName          String  @map("material_name") @db.VarChar(100) // 辅料名称
+  materialImageUrl      String? @map("material_image_url") @db.VarChar(500) // 辅料图片URL
+  materialColorText     String? @map("material_color_text") @db.VarChar(50) // 辅料颜色（文字描述）
+  materialColorImageUrl String? @map("material_color_image_url") @db.VarChar(500) // 辅料颜色（图片色卡URL）
+
+  // 用量信息
+  usage Decimal @db.Decimal(10, 4) // 单耗（支持小数，如0.8米）
+  unit  String  @db.VarChar(20) // 单耗单位（如：米, 条, 粒, 套）
+
+  // 供应商信息
+  supplier String? @db.VarChar(100) // 供应商名称
+
+  // 排序字段
+  sortOrder Int @default(0) @map("sort_order")
+
+  // 审计字段
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdBy Int?      @map("created_by")
+  updatedBy Int?      @map("updated_by")
+  deletedAt DateTime? @map("deleted_at")
+
+  // 关联关系
+  specDetails SpecDetail[]
+
+  @@index([variantId])
+  @@index([materialName])
+  @@index([deletedAt])
+  @@map("bom_items")
+}
+
+// -----------------------------------------------------------------------------
+// L4: SpecDetail (规格明细) - BOMItem's Children
+// -----------------------------------------------------------------------------
+/// 规格明细用于精确描述配料在不同尺码下的具体规格参数
+/// 业务规则：
+/// - 同一配料可有多条规格，每条对应一个尺码
+/// - 如果所有尺码通用，可只设置一条"通码"规格
+/// - spec_value 支持数字和文本（如：58.5, "5x3"）
+model SpecDetail {
+  id Int @id @default(autoincrement())
+
+  // 外键关联
+  bomItemId Int     @map("bom_item_id")
+  bomItem   BOMItem @relation(fields: [bomItemId], references: [id], onDelete: Cascade)
+
+  // 规格信息
+  size      String? @db.VarChar(20) // 尺码（如: S, M, L, XL, 通码）
+  specValue String  @map("spec_value") @db.VarChar(50) // 规格值（支持数字和文本）
+  specUnit  String  @map("spec_unit") @db.VarChar(20) // 规格单位（如: cm, mm, 寸）
+
+  // 排序字段
+  sortOrder Int @default(0) @map("sort_order")
+
+  // 审计字段
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([bomItemId, size]) // 同一配料下尺码唯一
+  @@index([bomItemId])
+  @@map("spec_details")
+}
+
+// =============================================================================
+// MASTER DATA ENTITIES (基础数据)
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Customer (客户管理)
+// -----------------------------------------------------------------------------
+/// 客户信息管理，可关联多个款号
+model Customer {
+  id Int @id @default(autoincrement())
+
+  // 基本信息
+  customerName  String  @map("customer_name") @db.VarChar(100) // 客户名称（公司名）
+  contactPerson String? @map("contact_person") @db.VarChar(50) // 联系人
+  contactPhone  String? @map("contact_phone") @db.VarChar(30) // 联系电话
+  contactEmail  String? @map("contact_email") @db.VarChar(100) // 联系邮箱
+  address       String? @db.Text // 地址
+  note          String? @db.Text // 备注
+
+  // 状态字段
+  isActive Boolean @default(true) @map("is_active") // 是否启用
+
+  // 审计字段
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdBy Int?      @map("created_by")
+  updatedBy Int?      @map("updated_by")
+  deletedAt DateTime? @map("deleted_at")
+
+  // 关联关系
+  styles Style[]
+
+  @@index([customerName])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("customers")
+}
+
+// -----------------------------------------------------------------------------
+// Size (尺码管理)
+// -----------------------------------------------------------------------------
+/// 尺码基础数据，支持自定义尺码代码和排序
+model Size {
+  id Int @id @default(autoincrement())
+
+  // 尺码信息
+  sizeCode  String  @unique @map("size_code") @db.VarChar(20) // 尺码代码（如：S, M, L, XL）
+  sizeName  String  @map("size_name") @db.VarChar(50) // 尺码名称（如：小号、中号）
+  sortOrder Int     @default(0) @map("sort_order") // 排序序号
+  note      String? @db.Text // 备注
+
+  // 状态字段
+  isActive Boolean @default(true) @map("is_active")
+
+  // 审计字段
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([sortOrder])
+  @@index([isActive])
+  @@map("sizes")
+}
+
+// -----------------------------------------------------------------------------
+// Unit (单位管理)
+// -----------------------------------------------------------------------------
+/// 计量单位基础数据，分类管理不同类型的单位
+model Unit {
+  id Int @id @default(autoincrement())
+
+  // 单位信息
+  unitCode String  @unique @map("unit_code") @db.VarChar(20) // 单位代码（如：m, pcs）
+  unitName String  @map("unit_name") @db.VarChar(50) // 单位名称（如：米、条、粒）
+  unitType String? @map("unit_type") @db.VarChar(30) // 单位类型（长度、数量、重量等）
+  note     String? @db.Text // 备注
+
+  // 状态字段
+  isActive Boolean @default(true) @map("is_active")
+
+  // 审计字段
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([unitType])
+  @@index([isActive])
+  @@map("units")
+}
+
+// =============================================================================
+// EXTENDED FEATURES (扩展功能 - 可选)
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Supplier (供应商管理) - 可选扩展
+// -----------------------------------------------------------------------------
+/// 供应商信息管理，可用于规范化供应商数据
+/// 当前设计：BOMItem 中直接存储供应商名称（简化方案）
+/// 未来可扩展：将 supplier 改为外键关联此表
+model Supplier {
+  id Int @id @default(autoincrement())
+
+  // 供应商信息
+  supplierName  String  @map("supplier_name") @db.VarChar(100)
+  contactPerson String? @map("contact_person") @db.VarChar(50)
+  contactPhone  String? @map("contact_phone") @db.VarChar(30)
+  contactEmail  String? @map("contact_email") @db.VarChar(100)
+  address       String? @db.Text
+  note          String? @db.Text
+
+  // 状态字段
+  isActive Boolean @default(true) @map("is_active")
+
+  // 审计字段
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([supplierName])
+  @@index([isActive])
+  @@map("suppliers")
+}
+
+// -----------------------------------------------------------------------------
+// Attachment (附件管理) - 可选扩展
+// -----------------------------------------------------------------------------
+/// 通用附件管理表，支持多种实体的附件关联
+/// 使用多态关联模式（entity_type + entity_id）
+model Attachment {
+  id Int @id @default(autoincrement())
+
+  // 多态关联
+  entityType String @map("entity_type") @db.VarChar(50) // 实体类型（style, variant, bom_item）
+  entityId   Int    @map("entity_id") // 实体ID
+
+  // 附件信息
+  fileName String  @map("file_name") @db.VarChar(200) // 原始文件名
+  fileUrl  String  @map("file_url") @db.VarChar(500) // 文件URL
+  fileType String  @map("file_type") @db.VarChar(50) // 文件类型（image, document, etc.）
+  fileSize Int?    @map("file_size") // 文件大小（字节）
+  mimeType String? @map("mime_type") @db.VarChar(100) // MIME类型
+
+  // 排序和描述
+  sortOrder   Int     @default(0) @map("sort_order")
+  description String? @db.VarChar(200)
+
+  // 审计字段
+  createdAt DateTime  @default(now()) @map("created_at")
+  createdBy Int?      @map("created_by")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([entityType, entityId])
+  @@index([deletedAt])
+  @@map("attachments")
+}
+
+// -----------------------------------------------------------------------------
+// OperationLog (操作日志) - 可选扩展
+// -----------------------------------------------------------------------------
+/// 操作日志表，记录关键业务操作的审计追踪
+model OperationLog {
+  id Int @id @default(autoincrement())
+
+  // 操作信息
+  entityType String @map("entity_type") @db.VarChar(50) // 实体类型
+  entityId   Int    @map("entity_id") // 实体ID
+  action     String @db.VarChar(50) // 操作类型（create, update, delete, clone）
+
+  // 变更详情
+  beforeData Json?   @map("before_data") // 变更前数据（JSON）
+  afterData  Json?   @map("after_data") // 变更后数据（JSON）
+  changeNote String? @map("change_note") @db.Text // 变更说明
+
+  // 操作人信息
+  operatorId Int?    @map("operator_id")
+  operatorIp String? @map("operator_ip") @db.VarChar(50)
+
+  // 时间戳
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("operation_logs")
+}
+
+// =============================================================================
+// FUTURE CONSIDERATIONS (未来扩展预留)
+// =============================================================================
+//
+// 1. User (用户管理) - 当需要用户认证时添加
+//    - 关联 createdBy, updatedBy 字段
+//    - 支持角色和权限控制
+//
+// 2. Order (订单管理) - 当需要持久化订单数据时添加
+//    - 记录下单配置和计算结果
+//    - 支持订单状态追踪
+//
+// 3. MaterialMaster (物料主数据) - 当需要规范化物料时添加
+//    - 统一管理物料信息
+//    - BOMItem 改为外键关联
+//
+// 4. Version (版本控制) - 当需要数据版本管理时添加
+//    - 支持历史版本回溯
+//    - 变更对比功能
+//
+// =============================================================================
