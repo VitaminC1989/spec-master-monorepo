@@ -5,19 +5,13 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3000,
+    port: 5173,
     open: true,
     proxy: {
-      // 代理 API 请求到生产环境或本地服务
+      // 代理 API 请求到 NestJS 后端
       '/api': {
-        // 选项 1: 代理到生产环境（需要替换为你的 Vercel 部署地址）
-        // target: 'https://your-project.vercel.app',
-
-        // 选项 2: 代理到本地 Vercel Dev（需要先运行 vercel dev）
-        target: 'http://localhost:3001',
-
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        // rewrite: (path) => path.replace(/^\/api/, '/api'),
       },
     },
   }
