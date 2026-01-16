@@ -13,6 +13,7 @@ import { ConfigProvider, App as AntApp } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
+import { VibeKanbanWebCompanion } from "vibe-kanban-web-companion";
 
 // 配置 dayjs 中文
 dayjs.locale("zh-cn");
@@ -34,6 +35,7 @@ import { UnitList } from "./pages/units/list";
 function App() {
   return (
     <BrowserRouter>
+      <VibeKanbanWebCompanion />
       {/* Ant Design 中文配置 */}
       <ConfigProvider
         locale={zhCN}
