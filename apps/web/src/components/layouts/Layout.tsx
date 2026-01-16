@@ -5,7 +5,6 @@
 
 import { Layout as AntLayout, Menu } from "antd";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { DataBackup } from "../common/DataBackup";
 
 const { Header, Content } = AntLayout;
 
@@ -63,11 +62,6 @@ export const Layout: React.FC = () => {
               onClick={handleMenuClick}
               style={{ border: 'none', background: 'transparent', minWidth: 500 }}
             />
-          </div>
-
-          {/* 右侧：数据管理 */}
-          <div className="flex items-center gap-4">
-            <DataBackup />
           </div>
         </div>
       </Header>
