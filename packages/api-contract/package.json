@@ -1,0 +1,16 @@
+{
+  "name": "@spec/api-contract",
+  "version": "1.0.0",
+  "description": "OpenAPI specification storage and validation for SpecMaster",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate": "redocly lint openapi.json",
+    "diff": "tsx scripts/diff.ts"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1.25.11",
+    "openapi-diff": "^0.24.1",
+    "tsx": "^4.19.2"
+  }
+}

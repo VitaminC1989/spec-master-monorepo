@@ -1,0 +1,24 @@
+{
+  "name": "@spec/types",
+  "version": "1.0.0",
+  "description": "Generated TypeScript types from OpenAPI specification",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "generate": "openapi-typescript ../api-contract/openapi.json -o src/generated/models.ts",
+    "build": "npm run generate && tsc",
+    "clean": "rm -rf dist src/generated"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.4.3",
+    "typescript": "^5.7.2"
+  }
+}

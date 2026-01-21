@@ -1,0 +1,1629 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/api/customers": {
+      "get": {
+        "operationId": "CustomersController_findAll",
+        "parameters": [
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "description": "Refine filters JSON",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "pagination",
+            "required": false,
+            "in": "query",
+            "description": "Refine pagination JSON",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回客户列表和总数"
+          }
+        },
+        "summary": "获取客户列表",
+        "tags": [
+          "Customers"
+        ]
+      },
+      "post": {
+        "operationId": "CustomersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "客户创建成功"
+          }
+        },
+        "summary": "创建客户",
+        "tags": [
+          "Customers"
+        ]
+      }
+    },
+    "/api/customers/{id}": {
+      "get": {
+        "operationId": "CustomersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "客户ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回客户详情"
+          },
+          "404": {
+            "description": "客户不存在"
+          }
+        },
+        "summary": "获取客户详情",
+        "tags": [
+          "Customers"
+        ]
+      },
+      "put": {
+        "operationId": "CustomersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "客户ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "客户更新成功"
+          },
+          "404": {
+            "description": "客户不存在"
+          }
+        },
+        "summary": "更新客户",
+        "tags": [
+          "Customers"
+        ]
+      },
+      "delete": {
+        "operationId": "CustomersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "客户ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "客户删除成功"
+          },
+          "404": {
+            "description": "客户不存在"
+          }
+        },
+        "summary": "删除客户（软删除）",
+        "tags": [
+          "Customers"
+        ]
+      }
+    },
+    "/api/styles": {
+      "get": {
+        "operationId": "StylesController_findAll",
+        "parameters": [
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "description": "Refine filters JSON",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "pagination",
+            "required": false,
+            "in": "query",
+            "description": "Refine pagination JSON",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回款号列表和总数"
+          }
+        },
+        "summary": "获取款号列表",
+        "tags": [
+          "Styles"
+        ]
+      },
+      "post": {
+        "operationId": "StylesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStyleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "款号创建成功"
+          }
+        },
+        "summary": "创建款号",
+        "tags": [
+          "Styles"
+        ]
+      }
+    },
+    "/api/styles/{id}": {
+      "get": {
+        "operationId": "StylesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "款号ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回款号详情（含颜色版本）"
+          },
+          "404": {
+            "description": "款号不存在"
+          }
+        },
+        "summary": "获取款号详情",
+        "tags": [
+          "Styles"
+        ]
+      },
+      "put": {
+        "operationId": "StylesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "款号ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStyleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "款号更新成功"
+          },
+          "404": {
+            "description": "款号不存在"
+          }
+        },
+        "summary": "更新款号",
+        "tags": [
+          "Styles"
+        ]
+      },
+      "delete": {
+        "operationId": "StylesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "款号ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "款号删除成功（级联删除所有颜色版本、配料、规格）"
+          },
+          "404": {
+            "description": "款号不存在"
+          }
+        },
+        "summary": "删除款号（含级联删除）",
+        "tags": [
+          "Styles"
+        ]
+      }
+    },
+    "/api/variants": {
+      "get": {
+        "operationId": "VariantsController_findAll",
+        "parameters": [
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "description": "Refine filters JSON",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "pagination",
+            "required": false,
+            "in": "query",
+            "description": "Refine pagination JSON",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回颜色版本列表和总数"
+          }
+        },
+        "summary": "获取颜色版本列表",
+        "tags": [
+          "Variants"
+        ]
+      },
+      "post": {
+        "operationId": "VariantsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVariantDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "颜色版本创建成功"
+          },
+          "409": {
+            "description": "颜色名称已存在"
+          }
+        },
+        "summary": "创建颜色版本",
+        "tags": [
+          "Variants"
+        ]
+      }
+    },
+    "/api/variants/{id}": {
+      "get": {
+        "operationId": "VariantsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "颜色版本ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回颜色版本详情（含配料和规格）"
+          },
+          "404": {
+            "description": "颜色版本不存在"
+          }
+        },
+        "summary": "获取颜色版本详情",
+        "tags": [
+          "Variants"
+        ]
+      },
+      "put": {
+        "operationId": "VariantsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "颜色版本ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVariantDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "颜色版本更新成功"
+          },
+          "404": {
+            "description": "颜色版本不存在"
+          },
+          "409": {
+            "description": "颜色名称已存在"
+          }
+        },
+        "summary": "更新颜色版本",
+        "tags": [
+          "Variants"
+        ]
+      },
+      "delete": {
+        "operationId": "VariantsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "颜色版本ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "颜色版本删除成功（级联删除所有配料、规格）"
+          },
+          "404": {
+            "description": "颜色版本不存在"
+          }
+        },
+        "summary": "删除颜色版本（含级联删除）",
+        "tags": [
+          "Variants"
+        ]
+      }
+    },
+    "/api/styles/{styleId}/variants/{variantId}/clone": {
+      "post": {
+        "operationId": "VariantsController_cloneVariant",
+        "parameters": [
+          {
+            "name": "styleId",
+            "required": true,
+            "in": "path",
+            "description": "款号ID",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "variantId",
+            "required": true,
+            "in": "path",
+            "description": "源颜色版本ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloneVariantDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "克隆成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloneVariantResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "颜色版本不存在"
+          },
+          "409": {
+            "description": "目标颜色名称已存在"
+          }
+        },
+        "summary": "深度克隆颜色版本",
+        "tags": [
+          "Variants"
+        ]
+      }
+    },
+    "/api/bom-items": {
+      "get": {
+        "operationId": "BomItemsController_findAll",
+        "parameters": [
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "description": "Refine filters JSON",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "pagination",
+            "required": false,
+            "in": "query",
+            "description": "Refine pagination JSON",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回配料明细列表和总数"
+          }
+        },
+        "summary": "获取配料明细列表",
+        "tags": [
+          "BOM Items"
+        ]
+      },
+      "post": {
+        "operationId": "BomItemsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBomItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "配料明细创建成功"
+          }
+        },
+        "summary": "创建配料明细",
+        "tags": [
+          "BOM Items"
+        ]
+      }
+    },
+    "/api/bom-items/{id}": {
+      "get": {
+        "operationId": "BomItemsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "配料明细ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回配料明细详情（含规格明细）"
+          },
+          "404": {
+            "description": "配料明细不存在"
+          }
+        },
+        "summary": "获取配料明细详情",
+        "tags": [
+          "BOM Items"
+        ]
+      },
+      "put": {
+        "operationId": "BomItemsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "配料明细ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBomItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "配料明细更新成功"
+          },
+          "404": {
+            "description": "配料明细不存在"
+          }
+        },
+        "summary": "更新配料明细",
+        "tags": [
+          "BOM Items"
+        ]
+      },
+      "delete": {
+        "operationId": "BomItemsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "配料明细ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "配料明细删除成功（级联删除所有规格明细）"
+          },
+          "404": {
+            "description": "配料明细不存在"
+          }
+        },
+        "summary": "删除配料明细（含级联删除规格）",
+        "tags": [
+          "BOM Items"
+        ]
+      }
+    },
+    "/api/spec-details": {
+      "get": {
+        "operationId": "SpecDetailsController_findAll",
+        "parameters": [
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "description": "Refine filters JSON",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "pagination",
+            "required": false,
+            "in": "query",
+            "description": "Refine pagination JSON",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "获取规格明细列表",
+        "tags": [
+          "Spec Details"
+        ]
+      },
+      "post": {
+        "operationId": "SpecDetailsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSpecDetailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "创建规格明细",
+        "tags": [
+          "Spec Details"
+        ]
+      }
+    },
+    "/api/spec-details/{id}": {
+      "get": {
+        "operationId": "SpecDetailsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "获取规格明细详情",
+        "tags": [
+          "Spec Details"
+        ]
+      },
+      "put": {
+        "operationId": "SpecDetailsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSpecDetailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "更新规格明细",
+        "tags": [
+          "Spec Details"
+        ]
+      },
+      "delete": {
+        "operationId": "SpecDetailsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "删除规格明细",
+        "tags": [
+          "Spec Details"
+        ]
+      }
+    },
+    "/api/sizes": {
+      "get": {
+        "operationId": "SizesController_findAll",
+        "parameters": [
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "pagination",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "获取尺码列表",
+        "tags": [
+          "Sizes"
+        ]
+      },
+      "post": {
+        "operationId": "SizesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSizeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "创建尺码",
+        "tags": [
+          "Sizes"
+        ]
+      }
+    },
+    "/api/sizes/{id}": {
+      "get": {
+        "operationId": "SizesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "获取尺码详情",
+        "tags": [
+          "Sizes"
+        ]
+      },
+      "put": {
+        "operationId": "SizesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSizeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "更新尺码",
+        "tags": [
+          "Sizes"
+        ]
+      },
+      "delete": {
+        "operationId": "SizesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "删除尺码",
+        "tags": [
+          "Sizes"
+        ]
+      }
+    },
+    "/api/units": {
+      "get": {
+        "operationId": "UnitsController_findAll",
+        "parameters": [
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "pagination",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "获取单位列表",
+        "tags": [
+          "Units"
+        ]
+      },
+      "post": {
+        "operationId": "UnitsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUnitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "创建单位",
+        "tags": [
+          "Units"
+        ]
+      }
+    },
+    "/api/units/{id}": {
+      "get": {
+        "operationId": "UnitsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "获取单位详情",
+        "tags": [
+          "Units"
+        ]
+      },
+      "put": {
+        "operationId": "UnitsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUnitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "更新单位",
+        "tags": [
+          "Units"
+        ]
+      },
+      "delete": {
+        "operationId": "UnitsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "删除单位",
+        "tags": [
+          "Units"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "SpecMaster API",
+    "description": "服装配方管理系统后端 API",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "styles",
+      "description": "款号管理"
+    },
+    {
+      "name": "variants",
+      "description": "颜色版本管理"
+    },
+    {
+      "name": "bom-items",
+      "description": "配料明细管理"
+    },
+    {
+      "name": "spec-details",
+      "description": "规格明细管理"
+    },
+    {
+      "name": "customers",
+      "description": "客户管理"
+    },
+    {
+      "name": "sizes",
+      "description": "尺码管理"
+    },
+    {
+      "name": "units",
+      "description": "单位管理"
+    }
+  ],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "CreateCustomerDto": {
+        "type": "object",
+        "properties": {
+          "customer_name": {
+            "type": "string",
+            "description": "客户名称",
+            "maxLength": 100
+          },
+          "contact_person": {
+            "type": "string",
+            "description": "联系人",
+            "maxLength": 50
+          },
+          "contact_phone": {
+            "type": "string",
+            "description": "联系电话",
+            "maxLength": 30
+          },
+          "contact_email": {
+            "type": "string",
+            "description": "联系邮箱",
+            "maxLength": 100
+          },
+          "address": {
+            "type": "string",
+            "description": "地址"
+          },
+          "note": {
+            "type": "string",
+            "description": "备注"
+          }
+        },
+        "required": [
+          "customer_name"
+        ]
+      },
+      "UpdateCustomerDto": {
+        "type": "object",
+        "properties": {
+          "customer_name": {
+            "type": "string",
+            "description": "客户名称",
+            "maxLength": 100
+          },
+          "contact_person": {
+            "type": "string",
+            "description": "联系人",
+            "maxLength": 50
+          },
+          "contact_phone": {
+            "type": "string",
+            "description": "联系电话",
+            "maxLength": 30
+          },
+          "contact_email": {
+            "type": "string",
+            "description": "联系邮箱",
+            "maxLength": 100
+          },
+          "address": {
+            "type": "string",
+            "description": "地址"
+          },
+          "note": {
+            "type": "string",
+            "description": "备注"
+          }
+        }
+      },
+      "CreateStyleDto": {
+        "type": "object",
+        "properties": {
+          "style_no": {
+            "type": "string",
+            "description": "款号",
+            "example": "9128",
+            "maxLength": 20
+          },
+          "style_name": {
+            "type": "string",
+            "description": "款式名称",
+            "maxLength": 100
+          },
+          "customer_id": {
+            "type": "number",
+            "description": "客户ID"
+          },
+          "public_note": {
+            "type": "string",
+            "description": "公共备注"
+          }
+        },
+        "required": [
+          "style_no"
+        ]
+      },
+      "UpdateStyleDto": {
+        "type": "object",
+        "properties": {
+          "style_no": {
+            "type": "string",
+            "description": "款号",
+            "example": "9128",
+            "maxLength": 20
+          },
+          "style_name": {
+            "type": "string",
+            "description": "款式名称",
+            "maxLength": 100
+          },
+          "customer_id": {
+            "type": "number",
+            "description": "客户ID"
+          },
+          "public_note": {
+            "type": "string",
+            "description": "公共备注"
+          }
+        }
+      },
+      "CreateVariantDto": {
+        "type": "object",
+        "properties": {
+          "style_id": {
+            "type": "number",
+            "description": "所属款号ID"
+          },
+          "color_name": {
+            "type": "string",
+            "description": "颜色名称",
+            "maxLength": 50
+          },
+          "sample_image_url": {
+            "type": "string",
+            "description": "样衣图片URL",
+            "maxLength": 500
+          },
+          "size_range": {
+            "type": "string",
+            "description": "尺码范围说明",
+            "maxLength": 100
+          },
+          "sort_order": {
+            "type": "number",
+            "description": "排序顺序",
+            "default": 0
+          }
+        },
+        "required": [
+          "style_id",
+          "color_name"
+        ]
+      },
+      "UpdateVariantDto": {
+        "type": "object",
+        "properties": {
+          "style_id": {
+            "type": "number",
+            "description": "所属款号ID"
+          },
+          "color_name": {
+            "type": "string",
+            "description": "颜色名称",
+            "maxLength": 50
+          },
+          "sample_image_url": {
+            "type": "string",
+            "description": "样衣图片URL",
+            "maxLength": 500
+          },
+          "size_range": {
+            "type": "string",
+            "description": "尺码范围说明",
+            "maxLength": 100
+          },
+          "sort_order": {
+            "type": "number",
+            "description": "排序顺序",
+            "default": 0
+          }
+        }
+      },
+      "CloneVariantDto": {
+        "type": "object",
+        "properties": {
+          "new_color_name": {
+            "type": "string",
+            "description": "新颜色名称"
+          },
+          "copy_sample_image": {
+            "type": "boolean",
+            "description": "是否复制样衣图片",
+            "default": true
+          }
+        },
+        "required": [
+          "new_color_name"
+        ]
+      },
+      "CloneVariantResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "新颜色版本ID"
+          },
+          "color_name": {
+            "type": "string",
+            "description": "新颜色名称"
+          },
+          "cloned_bom_count": {
+            "type": "number",
+            "description": "复制的配料数量"
+          },
+          "cloned_spec_count": {
+            "type": "number",
+            "description": "复制的规格数量"
+          }
+        },
+        "required": [
+          "id",
+          "color_name",
+          "cloned_bom_count",
+          "cloned_spec_count"
+        ]
+      },
+      "CreateSpecDetailDto": {
+        "type": "object",
+        "properties": {
+          "bom_item_id": {
+            "type": "number",
+            "description": "所属配料明细ID"
+          },
+          "size": {
+            "type": "string",
+            "description": "尺码",
+            "example": "M"
+          },
+          "spec_value": {
+            "type": "string",
+            "description": "规格值",
+            "example": "58.5"
+          },
+          "spec_unit": {
+            "type": "string",
+            "description": "规格单位",
+            "example": "cm"
+          },
+          "sort_order": {
+            "type": "number",
+            "description": "排序顺序"
+          }
+        },
+        "required": [
+          "bom_item_id",
+          "spec_value",
+          "spec_unit"
+        ]
+      },
+      "CreateBomItemDto": {
+        "type": "object",
+        "properties": {
+          "variant_id": {
+            "type": "number",
+            "description": "所属颜色版本ID"
+          },
+          "material_name": {
+            "type": "string",
+            "description": "辅料名称",
+            "maxLength": 100
+          },
+          "material_image_url": {
+            "type": "string",
+            "description": "辅料图片URL"
+          },
+          "material_color_text": {
+            "type": "string",
+            "description": "辅料颜色文字描述"
+          },
+          "material_color_image_url": {
+            "type": "string",
+            "description": "辅料颜色图片URL"
+          },
+          "usage": {
+            "type": "number",
+            "description": "单耗",
+            "example": 0.8
+          },
+          "unit": {
+            "type": "string",
+            "description": "单位",
+            "example": "米"
+          },
+          "supplier": {
+            "type": "string",
+            "description": "供应商"
+          },
+          "sort_order": {
+            "type": "number",
+            "description": "排序顺序"
+          },
+          "specDetails": {
+            "description": "规格明细列表",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateSpecDetailDto"
+            }
+          }
+        },
+        "required": [
+          "variant_id",
+          "material_name",
+          "usage",
+          "unit"
+        ]
+      },
+      "UpdateBomItemDto": {
+        "type": "object",
+        "properties": {
+          "variant_id": {
+            "type": "number",
+            "description": "所属颜色版本ID"
+          },
+          "material_name": {
+            "type": "string",
+            "description": "辅料名称",
+            "maxLength": 100
+          },
+          "material_image_url": {
+            "type": "string",
+            "description": "辅料图片URL"
+          },
+          "material_color_text": {
+            "type": "string",
+            "description": "辅料颜色文字描述"
+          },
+          "material_color_image_url": {
+            "type": "string",
+            "description": "辅料颜色图片URL"
+          },
+          "usage": {
+            "type": "number",
+            "description": "单耗",
+            "example": 0.8
+          },
+          "unit": {
+            "type": "string",
+            "description": "单位",
+            "example": "米"
+          },
+          "supplier": {
+            "type": "string",
+            "description": "供应商"
+          },
+          "sort_order": {
+            "type": "number",
+            "description": "排序顺序"
+          },
+          "specDetails": {
+            "description": "规格明细列表",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateSpecDetailDto"
+            }
+          }
+        }
+      },
+      "UpdateSpecDetailDto": {
+        "type": "object",
+        "properties": {
+          "bom_item_id": {
+            "type": "number",
+            "description": "所属配料明细ID"
+          },
+          "size": {
+            "type": "string",
+            "description": "尺码",
+            "example": "M"
+          },
+          "spec_value": {
+            "type": "string",
+            "description": "规格值",
+            "example": "58.5"
+          },
+          "spec_unit": {
+            "type": "string",
+            "description": "规格单位",
+            "example": "cm"
+          },
+          "sort_order": {
+            "type": "number",
+            "description": "排序顺序"
+          }
+        }
+      },
+      "CreateSizeDto": {
+        "type": "object",
+        "properties": {
+          "size_code": {
+            "type": "string",
+            "description": "尺码代码",
+            "example": "M"
+          },
+          "size_name": {
+            "type": "string",
+            "description": "尺码名称",
+            "example": "中号"
+          },
+          "sort_order": {
+            "type": "number",
+            "description": "排序顺序"
+          },
+          "note": {
+            "type": "string",
+            "description": "备注"
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "是否启用",
+            "default": true
+          }
+        },
+        "required": [
+          "size_code",
+          "size_name"
+        ]
+      },
+      "UpdateSizeDto": {
+        "type": "object",
+        "properties": {
+          "size_code": {
+            "type": "string",
+            "description": "尺码代码"
+          },
+          "size_name": {
+            "type": "string",
+            "description": "尺码名称"
+          },
+          "sort_order": {
+            "type": "number",
+            "description": "排序顺序"
+          },
+          "note": {
+            "type": "string",
+            "description": "备注"
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "是否启用"
+          }
+        }
+      },
+      "CreateUnitDto": {
+        "type": "object",
+        "properties": {
+          "unit_code": {
+            "type": "string",
+            "description": "单位代码",
+            "example": "m"
+          },
+          "unit_name": {
+            "type": "string",
+            "description": "单位名称",
+            "example": "米"
+          },
+          "unit_type": {
+            "type": "string",
+            "description": "单位类型",
+            "example": "长度"
+          },
+          "note": {
+            "type": "string",
+            "description": "备注"
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "是否启用",
+            "default": true
+          }
+        },
+        "required": [
+          "unit_code",
+          "unit_name"
+        ]
+      },
+      "UpdateUnitDto": {
+        "type": "object",
+        "properties": {
+          "unit_code": {
+            "type": "string",
+            "description": "单位代码"
+          },
+          "unit_name": {
+            "type": "string",
+            "description": "单位名称"
+          },
+          "unit_type": {
+            "type": "string",
+            "description": "单位类型"
+          },
+          "note": {
+            "type": "string",
+            "description": "备注"
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "是否启用"
+          }
+        }
+      }
+    }
+  }
+}
