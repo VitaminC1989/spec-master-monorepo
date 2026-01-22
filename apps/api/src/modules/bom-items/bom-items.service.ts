@@ -35,7 +35,7 @@ export class BomItemsService {
     ]);
 
     return {
-      data: data.map((item) => this.transformToSnakeCase(item)),
+      data,
       total,
     };
   }
@@ -54,29 +54,29 @@ export class BomItemsService {
       throw new NotFoundException(`配料明细 #${id} 不存在`);
     }
 
-    return { data: this.transformToSnakeCase(bomItem) };
+    return { data: bomItem };
   }
 
   async create(dto: CreateBomItemDto) {
     const bomItem = await this.prisma.bOMItem.create({
       data: {
-        variantId: dto.variant_id,
-        materialName: dto.material_name,
-        materialImageUrl: dto.material_image_url,
-        materialColorText: dto.material_color_text,
-        materialColorImageUrl: dto.material_color_image_url,
+        variantId: dto.variantId,
+        materialName: dto.materialName,
+        materialImageUrl: dto.materialImageUrl,
+        materialColorText: dto.materialColorText,
+        materialColorImageUrl: dto.materialColorImageUrl,
         usage: dto.usage,
         unit: dto.unit,
         supplier: dto.supplier,
-        sortOrder: dto.sort_order ?? 0,
+        sortOrder: dto.sortOrder ?? 0,
         // 嵌套创建规格明细
         specDetails: dto.specDetails
           ? {
               create: dto.specDetails.map((spec) => ({
                 size: spec.size,
-                specValue: spec.spec_value,
-                specUnit: spec.spec_unit,
-                sortOrder: spec.sort_order ?? 0,
+                specValue: spec.specValue,
+                specUnit: spec.specUnit,
+                sortOrder: spec.sortOrder ?? 0,
               })),
             }
           : undefined,
@@ -88,7 +88,7 @@ export class BomItemsService {
       },
     });
 
-    return { data: this.transformToSnakeCase(bomItem) };
+    return { data: bomItem };
   }
 
   async update(id: number, dto: UpdateBomItemDto) {
@@ -100,18 +100,18 @@ export class BomItemsService {
       // 更新配料明细基本信息
       const updateData: any = {};
 
-      if (dto.material_name !== undefined)
-        updateData.materialName = dto.material_name;
-      if (dto.material_image_url !== undefined)
-        updateData.materialImageUrl = dto.material_image_url;
-      if (dto.material_color_text !== undefined)
-        updateData.materialColorText = dto.material_color_text;
-      if (dto.material_color_image_url !== undefined)
-        updateData.materialColorImageUrl = dto.material_color_image_url;
+      if (dto.materialName !== undefined)
+        updateData.materialName = dto.materialName;
+      if (dto.materialImageUrl !== undefined)
+        updateData.materialImageUrl = dto.materialImageUrl;
+      if (dto.materialColorText !== undefined)
+        updateData.materialColorText = dto.materialColorText;
+      if (dto.materialColorImageUrl !== undefined)
+        updateData.materialColorImageUrl = dto.materialColorImageUrl;
       if (dto.usage !== undefined) updateData.usage = dto.usage;
       if (dto.unit !== undefined) updateData.unit = dto.unit;
       if (dto.supplier !== undefined) updateData.supplier = dto.supplier;
-      if (dto.sort_order !== undefined) updateData.sortOrder = dto.sort_order;
+      if (dto.sortOrder !== undefined) updateData.sortOrder = dto.sortOrder;
 
       await tx.bOMItem.update({
         where: { id },
@@ -131,9 +131,9 @@ export class BomItemsService {
             data: dto.specDetails.map((spec) => ({
               bomItemId: id,
               size: spec.size,
-              specValue: spec.spec_value,
-              specUnit: spec.spec_unit,
-              sortOrder: spec.sort_order ?? 0,
+              specValue: spec.specValue,
+              specUnit: spec.specUnit,
+              sortOrder: spec.sortOrder ?? 0,
             })),
           });
         }
@@ -150,7 +150,7 @@ export class BomItemsService {
       });
     });
 
-    return { data: this.transformToSnakeCase(bomItem) };
+    return { data: bomItem };
   }
 
   async remove(id: number) {
@@ -172,30 +172,5 @@ export class BomItemsService {
     });
 
     return existing;
-  }
-
-  private transformToSnakeCase(bomItem: any) {
-    return {
-      id: bomItem.id,
-      variant_id: bomItem.variantId,
-      material_name: bomItem.materialName,
-      material_image_url: bomItem.materialImageUrl,
-      material_color_text: bomItem.materialColorText,
-      material_color_image_url: bomItem.materialColorImageUrl,
-      usage: bomItem.usage ? Number(bomItem.usage) : 0,
-      unit: bomItem.unit,
-      supplier: bomItem.supplier,
-      sort_order: bomItem.sortOrder,
-      created_at: bomItem.createdAt?.toISOString(),
-      updated_at: bomItem.updatedAt?.toISOString(),
-      specDetails: bomItem.specDetails?.map((spec: any) => ({
-        id: spec.id,
-        bom_item_id: spec.bomItemId,
-        size: spec.size,
-        spec_value: spec.specValue,
-        spec_unit: spec.specUnit,
-        sort_order: spec.sortOrder,
-      })),
-    };
   }
 }

@@ -9,7 +9,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useOne } from "@refinedev/core";
 import { Button, Spin, Alert } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import type { IStyle } from "../../types/models";
+import type { IStyle } from "../../types/legacy";
 
 // 导入子组件
 import { StyleHeaderInfo } from "../../components/styles/StyleHeaderInfo";

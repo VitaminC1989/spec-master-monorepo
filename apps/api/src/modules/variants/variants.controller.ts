@@ -22,6 +22,8 @@ import {
   UpdateVariantDto,
   CloneVariantDto,
   CloneVariantResponseDto,
+  VariantResponseDto,
+  VariantListResponseDto,
 } from './dto';
 import {
   ParseFiltersPipe,
@@ -45,7 +47,7 @@ export class VariantsController {
     required: false,
     description: 'Refine pagination JSON',
   })
-  @ApiResponse({ status: 200, description: '返回颜色版本列表和总数' })
+  @ApiResponse({ status: 200, description: '返回颜色版本列表和总数', type: VariantListResponseDto })
   async findAll(
     @Query('filters', ParseFiltersPipe) filters: any[],
     @Query('pagination', ParsePaginationPipe)
@@ -60,6 +62,7 @@ export class VariantsController {
   @ApiResponse({
     status: 200,
     description: '返回颜色版本详情（含配料和规格）',
+    type: VariantResponseDto,
   })
   @ApiResponse({ status: 404, description: '颜色版本不存在' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
@@ -68,7 +71,7 @@ export class VariantsController {
 
   @Post('variants')
   @ApiOperation({ summary: '创建颜色版本' })
-  @ApiResponse({ status: 201, description: '颜色版本创建成功' })
+  @ApiResponse({ status: 201, description: '颜色版本创建成功', type: VariantResponseDto })
   @ApiResponse({ status: 409, description: '颜色名称已存在' })
   async create(@Body() createVariantDto: CreateVariantDto) {
     return this.variantsService.create(createVariantDto);
@@ -77,7 +80,7 @@ export class VariantsController {
   @Put('variants/:id')
   @ApiOperation({ summary: '更新颜色版本' })
   @ApiParam({ name: 'id', type: Number, description: '颜色版本ID' })
-  @ApiResponse({ status: 200, description: '颜色版本更新成功' })
+  @ApiResponse({ status: 200, description: '颜色版本更新成功', type: VariantResponseDto })
   @ApiResponse({ status: 404, description: '颜色版本不存在' })
   @ApiResponse({ status: 409, description: '颜色名称已存在' })
   async update(

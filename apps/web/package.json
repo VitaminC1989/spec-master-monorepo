@@ -17,6 +17,7 @@
     "@refinedev/antd": "^5.37.4",
     "@refinedev/core": "^4.47.1",
     "@refinedev/react-router-v6": "^4.5.5",
+    "@spec/types": "workspace:*",
     "antd": "^5.12.1",
     "dayjs": "^1.11.10",
     "exceljs": "^4.4.0",

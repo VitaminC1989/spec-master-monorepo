@@ -17,7 +17,7 @@ export class CreateSpecDetailDto {
   @ApiPropertyOptional({ description: 'BOM项ID（创建时可省略）' })
   @IsOptional()
   @IsInt()
-  bom_item_id?: number;
+  bomItemId?: number;
 
   @ApiPropertyOptional({ description: '尺码', example: 'M' })
   @IsOptional()
@@ -29,49 +29,49 @@ export class CreateSpecDetailDto {
   @IsString()
   @MinLength(1)
   @MaxLength(50)
-  spec_value: string;
+  specValue: string;
 
   @ApiProperty({ description: '规格单位', example: 'cm' })
   @IsString()
   @MinLength(1)
   @MaxLength(20)
-  spec_unit: string;
+  specUnit: string;
 
   @ApiPropertyOptional({ description: '排序顺序' })
   @IsOptional()
   @IsInt()
   @Min(0)
-  sort_order?: number;
+  sortOrder?: number;
 }
 
 export class CreateBomItemDto {
   @ApiProperty({ description: '所属颜色版本ID' })
   @IsInt()
-  variant_id: number;
+  variantId: number;
 
   @ApiProperty({ description: '辅料名称', maxLength: 100 })
   @IsString()
   @MinLength(1)
   @MaxLength(100)
-  material_name: string;
+  materialName: string;
 
   @ApiPropertyOptional({ description: '辅料图片URL' })
   @IsOptional()
   @IsString()
   @MaxLength(500)
-  material_image_url?: string;
+  materialImageUrl?: string;
 
   @ApiPropertyOptional({ description: '辅料颜色文字描述' })
   @IsOptional()
   @IsString()
   @MaxLength(50)
-  material_color_text?: string;
+  materialColorText?: string;
 
   @ApiPropertyOptional({ description: '辅料颜色图片URL' })
   @IsOptional()
   @IsString()
   @MaxLength(500)
-  material_color_image_url?: string;
+  materialColorImageUrl?: string;
 
   @ApiProperty({ description: '单耗', example: 0.8 })
   @IsNumber({ maxDecimalPlaces: 4 })
@@ -94,7 +94,7 @@ export class CreateBomItemDto {
   @IsOptional()
   @IsInt()
   @Min(0)
-  sort_order?: number;
+  sortOrder?: number;
 
   @ApiPropertyOptional({
     description: '规格明细列表',

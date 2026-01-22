@@ -6,12 +6,12 @@ export class CloneVariantDto {
   @IsString()
   @MinLength(1)
   @MaxLength(50)
-  new_color_name: string;
+  newColorName: string;
 
   @ApiPropertyOptional({ description: '是否复制样衣图片', default: true })
   @IsOptional()
   @IsBoolean()
-  copy_sample_image?: boolean;
+  copySampleImage?: boolean;
 }
 
 export class CloneVariantResponseDto {
@@ -19,11 +19,11 @@ export class CloneVariantResponseDto {
   id: number;
 
   @ApiProperty({ description: '新颜色名称' })
-  color_name: string;
+  colorName: string;
 
   @ApiProperty({ description: '复制的配料数量' })
-  cloned_bom_count: number;
+  clonedBomCount: number;
 
   @ApiProperty({ description: '复制的规格数量' })
-  cloned_spec_count: number;
+  clonedSpecCount: number;
 }

@@ -12,7 +12,7 @@ import React, { useState } from "react";
 import { Tabs, Button, Empty, Spin } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useList } from "@refinedev/core";
-import type { IColorVariant } from "../../types/models";
+import type { IColorVariant } from "../../types/legacy";
 import { VariantTabContent } from "./VariantTabContent";
 import { CreateVariantModal } from "./CreateVariantModal";
 
@@ -27,7 +27,7 @@ export const VariantTabs: React.FC<VariantTabsProps> = ({ styleId }) => {
   // 加载当前款号下的所有 L2 颜色版本（使用 filters 筛选）
   const { data, isLoading } = useList<IColorVariant>({
     resource: "variants",
-    filters: [{ field: "style_id", operator: "eq", value: styleId }],
+    filters: [{ field: "styleId", operator: "eq", value: styleId }],
   });
 
   const variants = data?.data || [];
@@ -77,7 +77,7 @@ export const VariantTabs: React.FC<VariantTabsProps> = ({ styleId }) => {
           key: String(variant.id),
           label: (
             <span className="px-2 py-1 text-base font-medium">
-              🎨 {variant.color_name}
+              🎨 {variant.colorName}
             </span>
           ),
           children: <VariantTabContent variant={variant} />,

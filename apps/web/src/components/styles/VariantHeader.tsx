@@ -22,7 +22,7 @@ import {
 import { CopyOutlined, PrinterOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useCustomMutation, useInvalidate, useDelete } from "@refinedev/core";
 import { useNavigate } from "react-router-dom";
-import type { IColorVariant } from "../../types/models";
+import type { IColorVariant } from "../../types/legacy";
 
 interface VariantHeaderProps {
   variant: IColorVariant;
@@ -54,9 +54,9 @@ export const VariantHeader: React.FC<VariantHeaderProps> = ({ variant }) => {
 
     cloneVariant(
       {
-        url: `/api/styles/${variant.style_id}/variants/${variant.id}/clone`,
+        url: `/api/styles/${variant.styleId}/variants/${variant.id}/clone`,
         method: "post",
-        values: { new_color_name: newColorName },
+        values: { newColorName: newColorName },
         successNotification: {
           message: "克隆成功",
           description: `新颜色"${newColorName}"已创建，包括所有配料和规格数据`,
@@ -100,7 +100,7 @@ export const VariantHeader: React.FC<VariantHeaderProps> = ({ variant }) => {
       title: "确认删除",
       content: (
         <div>
-          <p>确定要删除颜色版本 <strong>{variant.color_name}</strong> 吗？</p>
+          <p>确定要删除颜色版本 <strong>{variant.colorName}</strong> 吗？</p>
           <p className="text-red-500 text-sm">
             ⚠️ 此操作将同时删除该颜色下的所有配料明细和规格数据，且无法恢复！
           </p>
@@ -116,7 +116,7 @@ export const VariantHeader: React.FC<VariantHeaderProps> = ({ variant }) => {
             id: variant.id,
             successNotification: {
               message: "删除成功",
-              description: `颜色版本"${variant.color_name}"已删除`,
+              description: `颜色版本"${variant.colorName}"已删除`,
               type: "success",
             },
           },
@@ -125,7 +125,7 @@ export const VariantHeader: React.FC<VariantHeaderProps> = ({ variant }) => {
               message.success("删除成功，即将返回款号列表");
               // 删除后返回款号列表页
               setTimeout(() => {
-                navigate(`/styles/${variant.style_id}`);
+                navigate(`/styles/${variant.styleId}`);
                 // 刷新颜色列表
                 invalidate({
                   resource: "variants",
@@ -146,12 +146,12 @@ export const VariantHeader: React.FC<VariantHeaderProps> = ({ variant }) => {
           {/* 左侧：样衣大图 */}
           <div className="flex-shrink-0">
             <Image
-              src={variant.sample_image_url}
+              src={variant.sampleImageUrl}
               width={280}
               height={380}
               style={{ objectFit: "cover" }}
               className="rounded-lg shadow-md"
-              alt={`${variant.color_name}款样衣图`}
+              alt={`${variant.colorName}款样衣图`}
               placeholder={
                 <div className="flex items-center justify-center h-[380px] bg-gray-100">
                   <span>加载中...</span>
@@ -165,19 +165,19 @@ export const VariantHeader: React.FC<VariantHeaderProps> = ({ variant }) => {
             {/* 基础信息 */}
             <div>
               <h3 className="text-2xl font-bold text-gray-800 mb-4">
-                {variant.color_name}款
+                {variant.colorName}款
               </h3>
-              
+
               <Descriptions column={1} size="middle">
                 <Descriptions.Item label="颜色">
                   <span className="text-lg font-medium">
-                    {variant.color_name}
+                    {variant.colorName}
                   </span>
                 </Descriptions.Item>
-                
+
                 <Descriptions.Item label="尺码范围">
                   <span className="text-base">
-                    {variant.size_range || "未设置"}
+                    {variant.sizeRange || "未设置"}
                   </span>
                 </Descriptions.Item>
               </Descriptions>
@@ -237,7 +237,7 @@ export const VariantHeader: React.FC<VariantHeaderProps> = ({ variant }) => {
       >
         <div className="space-y-4">
           <p className="text-gray-700">
-            将复制当前"{variant.color_name}"款的所有数据，包括：
+            将复制当前"{variant.colorName}"款的所有数据，包括：
           </p>
           <ul className="list-disc list-inside text-gray-600 space-y-1">
             <li>颜色版本信息（样衣图、尺码范围）</li>

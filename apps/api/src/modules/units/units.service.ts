@@ -27,7 +27,7 @@ export class UnitsService {
     ]);
 
     return {
-      data: data.map((item) => this.transformToSnakeCase(item)),
+      data,
       total,
     };
   }
@@ -37,20 +37,20 @@ export class UnitsService {
     if (!unit) {
       throw new NotFoundException(`单位 #${id} 不存在`);
     }
-    return { data: this.transformToSnakeCase(unit) };
+    return { data: unit };
   }
 
   async create(dto: CreateUnitDto) {
     const unit = await this.prisma.unit.create({
       data: {
-        unitCode: dto.unit_code,
-        unitName: dto.unit_name,
-        unitType: dto.unit_type,
+        unitCode: dto.unitCode,
+        unitName: dto.unitName,
+        unitType: dto.unitType,
         note: dto.note,
-        isActive: dto.is_active ?? true,
+        isActive: dto.isActive ?? true,
       },
     });
-    return { data: this.transformToSnakeCase(unit) };
+    return { data: unit };
   }
 
   async update(id: number, dto: UpdateUnitDto) {
@@ -58,30 +58,19 @@ export class UnitsService {
     const unit = await this.prisma.unit.update({
       where: { id },
       data: {
-        unitCode: dto.unit_code,
-        unitName: dto.unit_name,
-        unitType: dto.unit_type,
+        unitCode: dto.unitCode,
+        unitName: dto.unitName,
+        unitType: dto.unitType,
         note: dto.note,
-        isActive: dto.is_active,
+        isActive: dto.isActive,
       },
     });
-    return { data: this.transformToSnakeCase(unit) };
+    return { data: unit };
   }
 
   async remove(id: number) {
     const existing = await this.findOne(id);
     await this.prisma.unit.delete({ where: { id } });
     return existing;
-  }
-
-  private transformToSnakeCase(unit: any) {
-    return {
-      id: unit.id,
-      unit_code: unit.unitCode,
-      unit_name: unit.unitName,
-      unit_type: unit.unitType,
-      note: unit.note,
-      is_active: unit.isActive,
-    };
   }
 }

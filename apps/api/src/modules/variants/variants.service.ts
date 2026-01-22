@@ -39,7 +39,7 @@ export class VariantsService {
     ]);
 
     return {
-      data: data.map((item) => this.transformToSnakeCase(item)),
+      data,
       total,
     };
   }
@@ -64,36 +64,36 @@ export class VariantsService {
       throw new NotFoundException(`颜色版本 #${id} 不存在`);
     }
 
-    return { data: this.transformToSnakeCase(variant) };
+    return { data: variant };
   }
 
   async create(dto: CreateVariantDto) {
     // 检查同一款号下颜色名称是否唯一
     const existing = await this.prisma.colorVariant.findFirst({
       where: {
-        styleId: dto.style_id,
-        colorName: dto.color_name,
+        styleId: dto.styleId,
+        colorName: dto.colorName,
         deletedAt: null,
       },
     });
 
     if (existing) {
       throw new ConflictException(
-        `颜色名称 "${dto.color_name}" 在该款号下已存在`,
+        `颜色名称 "${dto.colorName}" 在该款号下已存在`,
       );
     }
 
     const variant = await this.prisma.colorVariant.create({
       data: {
-        styleId: dto.style_id,
-        colorName: dto.color_name,
-        sampleImageUrl: dto.sample_image_url,
-        sizeRange: dto.size_range,
-        sortOrder: dto.sort_order ?? 0,
+        styleId: dto.styleId,
+        colorName: dto.colorName,
+        sampleImageUrl: dto.sampleImageUrl,
+        sizeRange: dto.sizeRange,
+        sortOrder: dto.sortOrder ?? 0,
       },
     });
 
-    return { data: this.transformToSnakeCase(variant) };
+    return { data: variant };
   }
 
   async update(id: number, dto: UpdateVariantDto) {
@@ -107,11 +107,11 @@ export class VariantsService {
     }
 
     // 如果更新了颜色名称，检查唯一性
-    if (dto.color_name && dto.color_name !== existingVariant.colorName) {
+    if (dto.colorName && dto.colorName !== existingVariant.colorName) {
       const duplicate = await this.prisma.colorVariant.findFirst({
         where: {
-          styleId: dto.style_id ?? existingVariant.styleId,
-          colorName: dto.color_name,
+          styleId: dto.styleId ?? existingVariant.styleId,
+          colorName: dto.colorName,
           deletedAt: null,
           NOT: { id },
         },
@@ -119,7 +119,7 @@ export class VariantsService {
 
       if (duplicate) {
         throw new ConflictException(
-          `颜色名称 "${dto.color_name}" 在该款号下已存在`,
+          `颜色名称 "${dto.colorName}" 在该款号下已存在`,
         );
       }
     }
@@ -127,14 +127,14 @@ export class VariantsService {
     const variant = await this.prisma.colorVariant.update({
       where: { id },
       data: {
-        colorName: dto.color_name,
-        sampleImageUrl: dto.sample_image_url,
-        sizeRange: dto.size_range,
-        sortOrder: dto.sort_order,
+        colorName: dto.colorName,
+        sampleImageUrl: dto.sampleImageUrl,
+        sizeRange: dto.sizeRange,
+        sortOrder: dto.sortOrder,
       },
     });
 
-    return { data: this.transformToSnakeCase(variant) };
+    return { data: variant };
   }
 
   async remove(id: number) {
@@ -202,14 +202,14 @@ export class VariantsService {
     const existingVariant = await this.prisma.colorVariant.findFirst({
       where: {
         styleId,
-        colorName: dto.new_color_name,
+        colorName: dto.newColorName,
         deletedAt: null,
       },
     });
 
     if (existingVariant) {
       throw new ConflictException(
-        `颜色名称 "${dto.new_color_name}" 在该款号下已存在`,
+        `颜色名称 "${dto.newColorName}" 在该款号下已存在`,
       );
     }
 
@@ -222,9 +222,9 @@ export class VariantsService {
       const variant = await tx.colorVariant.create({
         data: {
           styleId,
-          colorName: dto.new_color_name,
+          colorName: dto.newColorName,
           sampleImageUrl:
-            dto.copy_sample_image !== false
+            dto.copySampleImage !== false
               ? sourceVariant.sampleImageUrl
               : null,
           sizeRange: sourceVariant.sizeRange,
@@ -270,48 +270,9 @@ export class VariantsService {
 
     return {
       id: newVariant.id,
-      color_name: newVariant.colorName,
-      cloned_bom_count: clonedBomCount,
-      cloned_spec_count: clonedSpecCount,
+      colorName: newVariant.colorName,
+      clonedBomCount: clonedBomCount,
+      clonedSpecCount: clonedSpecCount,
     };
-  }
-
-  private transformToSnakeCase(variant: any) {
-    const result: any = {
-      id: variant.id,
-      style_id: variant.styleId,
-      color_name: variant.colorName,
-      sample_image_url: variant.sampleImageUrl,
-      size_range: variant.sizeRange,
-      sort_order: variant.sortOrder,
-      created_at: variant.createdAt?.toISOString(),
-      updated_at: variant.updatedAt?.toISOString(),
-    };
-
-    // 转换嵌套的配料明细
-    if (variant.bomItems) {
-      result.bomItems = variant.bomItems.map((bom: any) => ({
-        id: bom.id,
-        variant_id: bom.variantId,
-        material_name: bom.materialName,
-        material_image_url: bom.materialImageUrl,
-        material_color_text: bom.materialColorText,
-        material_color_image_url: bom.materialColorImageUrl,
-        usage: bom.usage ? Number(bom.usage) : 0,
-        unit: bom.unit,
-        supplier: bom.supplier,
-        sort_order: bom.sortOrder,
-        specDetails: bom.specDetails?.map((spec: any) => ({
-          id: spec.id,
-          bom_item_id: spec.bomItemId,
-          size: spec.size,
-          spec_value: spec.specValue,
-          spec_unit: spec.specUnit,
-          sort_order: spec.sortOrder,
-        })),
-      }));
-    }
-
-    return result;
   }
 }

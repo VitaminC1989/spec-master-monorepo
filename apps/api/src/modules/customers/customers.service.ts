@@ -30,7 +30,7 @@ export class CustomersService {
     ]);
 
     return {
-      data: data.map((item) => this.transformToSnakeCase(item)),
+      data,
       total,
     };
   }
@@ -44,22 +44,22 @@ export class CustomersService {
       throw new NotFoundException(`客户 #${id} 不存在`);
     }
 
-    return { data: this.transformToSnakeCase(customer) };
+    return { data: customer };
   }
 
   async create(dto: CreateCustomerDto) {
     const customer = await this.prisma.customer.create({
       data: {
-        customerName: dto.customer_name,
-        contactPerson: dto.contact_person,
-        contactPhone: dto.contact_phone,
-        contactEmail: dto.contact_email,
+        customerName: dto.customerName,
+        contactPerson: dto.contactPerson,
+        contactPhone: dto.contactPhone,
+        contactEmail: dto.contactEmail,
         address: dto.address,
         note: dto.note,
       },
     });
 
-    return { data: this.transformToSnakeCase(customer) };
+    return { data: customer };
   }
 
   async update(id: number, dto: UpdateCustomerDto) {
@@ -69,24 +69,24 @@ export class CustomersService {
     const customer = await this.prisma.customer.update({
       where: { id },
       data: {
-        customerName: dto.customer_name,
-        contactPerson: dto.contact_person,
-        contactPhone: dto.contact_phone,
-        contactEmail: dto.contact_email,
+        customerName: dto.customerName,
+        contactPerson: dto.contactPerson,
+        contactPhone: dto.contactPhone,
+        contactEmail: dto.contactEmail,
         address: dto.address,
         note: dto.note,
       },
     });
 
     // 同步更新所有关联 Style 的 customerName
-    if (dto.customer_name !== undefined) {
+    if (dto.customerName !== undefined) {
       await this.prisma.style.updateMany({
         where: { customerId: id },
-        data: { customerName: dto.customer_name },
+        data: { customerName: dto.customerName },
       });
     }
 
-    return { data: this.transformToSnakeCase(customer) };
+    return { data: customer };
   }
 
   async remove(id: number) {
@@ -100,20 +100,5 @@ export class CustomersService {
     });
 
     return existing;
-  }
-
-  private transformToSnakeCase(customer: any) {
-    return {
-      id: customer.id,
-      customer_name: customer.customerName,
-      contact_person: customer.contactPerson,
-      contact_phone: customer.contactPhone,
-      contact_email: customer.contactEmail,
-      address: customer.address,
-      note: customer.note,
-      is_active: customer.isActive,
-      created_at: customer.createdAt?.toISOString(),
-      updated_at: customer.updatedAt?.toISOString(),
-    };
   }
 }

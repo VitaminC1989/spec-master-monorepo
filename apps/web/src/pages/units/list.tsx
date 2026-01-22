@@ -9,7 +9,7 @@ import { ProTable } from "@ant-design/pro-components";
 import { Button, Modal, Form, Input, Switch, message, Space, Tag } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useDelete } from "@refinedev/core";
-import type { IUnit } from "../../types/models";
+import type { IUnit } from "../../types/legacy";
 
 export const UnitList: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -37,7 +37,7 @@ export const UnitList: React.FC = () => {
   const handleDelete = (record: IUnit) => {
     Modal.confirm({
       title: "确认删除",
-      content: `确定要删除单位"${record.unit_name}"吗？`,
+      content: `确定要删除单位"${record.unitName}"吗？`,
       okText: "确认删除",
       okType: "danger",
       cancelText: "取消",
@@ -75,7 +75,7 @@ export const UnitList: React.FC = () => {
         columns={[
           {
             title: "单位代码",
-            dataIndex: "unit_code",
+            dataIndex: "unitCode",
             width: 120,
             render: (text) => (
               <Tag color="blue" className="text-base px-3 py-1">
@@ -85,13 +85,13 @@ export const UnitList: React.FC = () => {
           },
           {
             title: "单位名称",
-            dataIndex: "unit_name",
+            dataIndex: "unitName",
             width: 150,
             render: (text) => <span className="font-medium">{text}</span>,
           },
           {
             title: "单位类型",
-            dataIndex: "unit_type",
+            dataIndex: "unitType",
             width: 120,
             render: (text) => (
               text ? <Tag color="cyan">{text}</Tag> : "-"
@@ -99,7 +99,7 @@ export const UnitList: React.FC = () => {
           },
           {
             title: "状态",
-            dataIndex: "is_active",
+            dataIndex: "isActive",
             width: 100,
             render: (active) => (
               <Tag color={active ? "green" : "red"}>
@@ -155,22 +155,22 @@ export const UnitList: React.FC = () => {
         <Form {...editFormProps} layout="vertical">
           <Form.Item
             label="单位代码"
-            name="unit_code"
+            name="unitCode"
             rules={[{ required: true, message: "请输入单位代码" }]}
           >
             <Input placeholder="如：m, pcs, kg" />
           </Form.Item>
           <Form.Item
             label="单位名称"
-            name="unit_name"
+            name="unitName"
             rules={[{ required: true, message: "请输入单位名称" }]}
           >
             <Input placeholder="如：米、条、千克" />
           </Form.Item>
-          <Form.Item label="单位类型" name="unit_type">
+          <Form.Item label="单位类型" name="unitType">
             <Input placeholder="如：长度、数量、重量" />
           </Form.Item>
-          <Form.Item label="是否启用" name="is_active" valuePropName="checked">
+          <Form.Item label="是否启用" name="isActive" valuePropName="checked">
             <Switch />
           </Form.Item>
           <Form.Item label="备注" name="note">
@@ -203,9 +203,11 @@ const CreateUnitModal: React.FC<CreateUnitModalProps> = ({
     form.validateFields().then((values) => {
       const newUnit = {
         ...values,
-        is_active: values.is_active !== false, // 默认启用
+        isActive: values.isActive !== false, // 默认启用
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
-      
+
       createUnit(
         { resource: "units", values: newUnit },
         {
@@ -230,25 +232,25 @@ const CreateUnitModal: React.FC<CreateUnitModalProps> = ({
       okText="创建"
       cancelText="取消"
     >
-      <Form form={form} layout="vertical" initialValues={{ is_active: true }}>
+      <Form form={form} layout="vertical" initialValues={{ isActive: true }}>
         <Form.Item
           label="单位代码"
-          name="unit_code"
+          name="unitCode"
           rules={[{ required: true, message: "请输入单位代码" }]}
         >
           <Input placeholder="如：m, pcs, kg" />
         </Form.Item>
         <Form.Item
           label="单位名称"
-          name="unit_name"
+          name="unitName"
           rules={[{ required: true, message: "请输入单位名称" }]}
         >
           <Input placeholder="如：米、条、千克" />
         </Form.Item>
-        <Form.Item label="单位类型" name="unit_type">
+        <Form.Item label="单位类型" name="unitType">
           <Input placeholder="如：长度、数量、重量" />
         </Form.Item>
-        <Form.Item label="是否启用" name="is_active" valuePropName="checked">
+        <Form.Item label="是否启用" name="isActive" valuePropName="checked">
           <Switch defaultChecked />
         </Form.Item>
         <Form.Item label="备注" name="note">

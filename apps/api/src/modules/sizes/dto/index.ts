@@ -14,19 +14,19 @@ export class CreateSizeDto {
   @IsString()
   @MinLength(1)
   @MaxLength(20)
-  size_code: string;
+  sizeCode: string;
 
   @ApiProperty({ description: '尺码名称', example: '中号' })
   @IsString()
   @MinLength(1)
   @MaxLength(50)
-  size_name: string;
+  sizeName: string;
 
   @ApiPropertyOptional({ description: '排序顺序' })
   @IsOptional()
   @IsInt()
   @Min(0)
-  sort_order?: number;
+  sortOrder?: number;
 
   @ApiPropertyOptional({ description: '备注' })
   @IsOptional()
@@ -36,7 +36,7 @@ export class CreateSizeDto {
   @ApiPropertyOptional({ description: '是否启用', default: true })
   @IsOptional()
   @IsBoolean()
-  is_active?: boolean;
+  isActive?: boolean;
 }
 
 export class UpdateSizeDto {
@@ -45,20 +45,20 @@ export class UpdateSizeDto {
   @IsString()
   @MinLength(1)
   @MaxLength(20)
-  size_code?: string;
+  sizeCode?: string;
 
   @ApiPropertyOptional({ description: '尺码名称' })
   @IsOptional()
   @IsString()
   @MinLength(1)
   @MaxLength(50)
-  size_name?: string;
+  sizeName?: string;
 
   @ApiPropertyOptional({ description: '排序顺序' })
   @IsOptional()
   @IsInt()
   @Min(0)
-  sort_order?: number;
+  sortOrder?: number;
 
   @ApiPropertyOptional({ description: '备注' })
   @IsOptional()
@@ -68,5 +68,7 @@ export class UpdateSizeDto {
   @ApiPropertyOptional({ description: '是否启用' })
   @IsOptional()
   @IsBoolean()
-  is_active?: boolean;
+  isActive?: boolean;
 }
+
+export * from './size-response.dto';

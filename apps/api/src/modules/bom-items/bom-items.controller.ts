@@ -17,7 +17,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { BomItemsService } from './bom-items.service';
-import { CreateBomItemDto, UpdateBomItemDto } from './dto';
+import { CreateBomItemDto, UpdateBomItemDto, BOMItemResponseDto, BOMItemListResponseDto } from './dto';
 import {
   ParseFiltersPipe,
   ParsePaginationPipe,
@@ -40,7 +40,7 @@ export class BomItemsController {
     required: false,
     description: 'Refine pagination JSON',
   })
-  @ApiResponse({ status: 200, description: '返回配料明细列表和总数' })
+  @ApiResponse({ status: 200, description: '返回配料明细列表和总数', type: BOMItemListResponseDto })
   async findAll(
     @Query('filters', ParseFiltersPipe) filters: any[],
     @Query('pagination', ParsePaginationPipe)
@@ -52,7 +52,7 @@ export class BomItemsController {
   @Get(':id')
   @ApiOperation({ summary: '获取配料明细详情' })
   @ApiParam({ name: 'id', type: Number, description: '配料明细ID' })
-  @ApiResponse({ status: 200, description: '返回配料明细详情（含规格明细）' })
+  @ApiResponse({ status: 200, description: '返回配料明细详情（含规格明细）', type: BOMItemResponseDto })
   @ApiResponse({ status: 404, description: '配料明细不存在' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.bomItemsService.findOne(id);
@@ -60,7 +60,7 @@ export class BomItemsController {
 
   @Post()
   @ApiOperation({ summary: '创建配料明细' })
-  @ApiResponse({ status: 201, description: '配料明细创建成功' })
+  @ApiResponse({ status: 201, description: '配料明细创建成功', type: BOMItemResponseDto })
   async create(@Body() createBomItemDto: CreateBomItemDto) {
     return this.bomItemsService.create(createBomItemDto);
   }
@@ -68,7 +68,7 @@ export class BomItemsController {
   @Put(':id')
   @ApiOperation({ summary: '更新配料明细' })
   @ApiParam({ name: 'id', type: Number, description: '配料明细ID' })
-  @ApiResponse({ status: 200, description: '配料明细更新成功' })
+  @ApiResponse({ status: 200, description: '配料明细更新成功', type: BOMItemResponseDto })
   @ApiResponse({ status: 404, description: '配料明细不存在' })
   async update(
     @Param('id', ParseIntPipe) id: number,

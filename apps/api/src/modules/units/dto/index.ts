@@ -12,19 +12,19 @@ export class CreateUnitDto {
   @IsString()
   @MinLength(1)
   @MaxLength(20)
-  unit_code: string;
+  unitCode: string;
 
   @ApiProperty({ description: '单位名称', example: '米' })
   @IsString()
   @MinLength(1)
   @MaxLength(50)
-  unit_name: string;
+  unitName: string;
 
   @ApiPropertyOptional({ description: '单位类型', example: '长度' })
   @IsOptional()
   @IsString()
   @MaxLength(30)
-  unit_type?: string;
+  unitType?: string;
 
   @ApiPropertyOptional({ description: '备注' })
   @IsOptional()
@@ -34,7 +34,7 @@ export class CreateUnitDto {
   @ApiPropertyOptional({ description: '是否启用', default: true })
   @IsOptional()
   @IsBoolean()
-  is_active?: boolean;
+  isActive?: boolean;
 }
 
 export class UpdateUnitDto {
@@ -43,20 +43,20 @@ export class UpdateUnitDto {
   @IsString()
   @MinLength(1)
   @MaxLength(20)
-  unit_code?: string;
+  unitCode?: string;
 
   @ApiPropertyOptional({ description: '单位名称' })
   @IsOptional()
   @IsString()
   @MinLength(1)
   @MaxLength(50)
-  unit_name?: string;
+  unitName?: string;
 
   @ApiPropertyOptional({ description: '单位类型' })
   @IsOptional()
   @IsString()
   @MaxLength(30)
-  unit_type?: string;
+  unitType?: string;
 
   @ApiPropertyOptional({ description: '备注' })
   @IsOptional()
@@ -66,5 +66,7 @@ export class UpdateUnitDto {
   @ApiPropertyOptional({ description: '是否启用' })
   @IsOptional()
   @IsBoolean()
-  is_active?: boolean;
+  isActive?: boolean;
 }
+
+export * from './unit-response.dto';

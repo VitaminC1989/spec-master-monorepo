@@ -20,11 +20,11 @@ import {
 } from "antd";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { useUpdate, useInvalidate } from "@refinedev/core";
-import type { IBOMItem, ISpecDetail } from "../../types/models";
+import type { IBOMItemWithSpecs, ISpecDetail } from "../../types/legacy";
 
 interface SpecDetailModalFormProps {
   open: boolean;
-  bomItem: IBOMItem | null;
+  bomItem: IBOMItemWithSpecs | null;
   onClose: () => void;
 }
 
@@ -124,7 +124,7 @@ export const SpecDetailModalForm: React.FC<SpecDetailModalFormProps> = ({
       title={
         <div className="text-lg">
           <span className="mr-2">📏</span>
-          编辑规格明细 - {bomItem?.material_name}
+          编辑规格明细 - {bomItem?.materialName}
         </div>
       }
       open={open}
@@ -194,7 +194,7 @@ export const SpecDetailModalForm: React.FC<SpecDetailModalFormProps> = ({
 
                       {/* 规格值字段（必填）*/}
                       <Form.Item
-                        name={[field.name, "spec_value"]}
+                        name={[field.name, "specValue"]}
                         label="规格值"
                         rules={[{ required: true, message: "请输入规格值" }]}
                         style={{ marginBottom: 0, width: 180 }}
@@ -209,7 +209,7 @@ export const SpecDetailModalForm: React.FC<SpecDetailModalFormProps> = ({
 
                       {/* 规格单位字段（必填）*/}
                       <Form.Item
-                        name={[field.name, "spec_unit"]}
+                        name={[field.name, "specUnit"]}
                         label="规格单位"
                         rules={[{ required: true, message: "请输入单位" }]}
                         style={{ marginBottom: 0, width: 120 }}
@@ -227,8 +227,8 @@ export const SpecDetailModalForm: React.FC<SpecDetailModalFormProps> = ({
                 type="dashed"
                 onClick={() => add({
                   size: "",
-                  spec_value: undefined,
-                  spec_unit: "",
+                  specValue: undefined,
+                  specUnit: "",
                 })}
                 block
                 icon={<PlusOutlined />}

@@ -33,7 +33,7 @@ export class StylesService {
     ]);
 
     return {
-      data: data.map((item) => this.transformToSnakeCase(item)),
+      data,
       total,
     };
   }
@@ -54,30 +54,30 @@ export class StylesService {
       throw new NotFoundException(`款号 #${id} 不存在`);
     }
 
-    return { data: this.transformToSnakeCase(style) };
+    return { data: style };
   }
 
   async create(dto: CreateStyleDto) {
     // 自动同步 customer_name
     let customerName: string | null = null;
-    if (dto.customer_id) {
+    if (dto.customerId) {
       const customer = await this.prisma.customer.findUnique({
-        where: { id: dto.customer_id },
+        where: { id: dto.customerId },
       });
       customerName = customer?.customerName || null;
     }
 
     const style = await this.prisma.style.create({
       data: {
-        styleNo: dto.style_no,
-        styleName: dto.style_name,
-        customerId: dto.customer_id,
+        styleNo: dto.styleNo,
+        styleName: dto.styleName,
+        customerId: dto.customerId,
         customerName,
-        publicNote: dto.public_note,
+        publicNote: dto.publicNote,
       },
     });
 
-    return { data: this.transformToSnakeCase(style) };
+    return { data: style };
   }
 
   async update(id: number, dto: UpdateStyleDto) {
@@ -86,25 +86,25 @@ export class StylesService {
 
     // 如果更新了 customer_id，同步更新 customer_name
     let customerName: string | null | undefined;
-    if (dto.customer_id !== undefined) {
-      if (dto.customer_id === null) {
+    if (dto.customerId !== undefined) {
+      if (dto.customerId === null) {
         customerName = null;
       } else {
         const customer = await this.prisma.customer.findUnique({
-          where: { id: dto.customer_id },
+          where: { id: dto.customerId },
         });
         customerName = customer?.customerName;
       }
     }
 
     const updateData: any = {
-      styleNo: dto.style_no,
-      styleName: dto.style_name,
-      publicNote: dto.public_note,
+      styleNo: dto.styleNo,
+      styleName: dto.styleName,
+      publicNote: dto.publicNote,
     };
 
-    if (dto.customer_id !== undefined) {
-      updateData.customerId = dto.customer_id;
+    if (dto.customerId !== undefined) {
+      updateData.customerId = dto.customerId;
       updateData.customerName = customerName;
     }
 
@@ -113,7 +113,7 @@ export class StylesService {
       data: updateData,
     });
 
-    return { data: this.transformToSnakeCase(style) };
+    return { data: style };
   }
 
   async remove(id: number) {
@@ -158,33 +158,5 @@ export class StylesService {
     });
 
     return existing;
-  }
-
-  private transformToSnakeCase(style: any) {
-    const result: any = {
-      id: style.id,
-      style_no: style.styleNo,
-      style_name: style.styleName,
-      customer_id: style.customerId,
-      customer_name: style.customerName || style.customer?.customerName,
-      public_note: style.publicNote,
-      create_date: style.createdAt?.toISOString(),
-      created_at: style.createdAt?.toISOString(),
-      updated_at: style.updatedAt?.toISOString(),
-    };
-
-    // 转换嵌套的颜色版本
-    if (style.colorVariants) {
-      result.colorVariants = style.colorVariants.map((v: any) => ({
-        id: v.id,
-        style_id: v.styleId,
-        color_name: v.colorName,
-        sample_image_url: v.sampleImageUrl,
-        size_range: v.sizeRange,
-        sort_order: v.sortOrder,
-      }));
-    }
-
-    return result;
   }
 }

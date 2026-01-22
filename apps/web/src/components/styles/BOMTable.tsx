@@ -13,7 +13,7 @@ import { EditableProTable } from "@ant-design/pro-components";
 import { Image, Button, Tag, Upload, message } from "antd";
 import { EditOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useList, useCreate, useUpdate, useDelete } from "@refinedev/core";
-import type { IBOMItem, ISpecDetail } from "../../types/models";
+import type { IBOMItem, IBOMItemWithSpecs, ISpecDetail } from "../../types/legacy";
 import { SpecDetailModalForm } from "./SpecDetailModalForm";
 import { MaterialColorEditor, MaterialColorDisplay } from "./MaterialColorEditor";
 import { uploadToQiniu } from "../../utils/qiniuUpload";
@@ -102,12 +102,12 @@ const MaterialImageUploader: React.FC<MaterialImageUploaderProps> = ({ value, on
 
 export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
   // 当前正在编辑规格的配料记录
-  const [editingRecord, setEditingRecord] = useState<IBOMItem | null>(null);
+  const [editingRecord, setEditingRecord] = useState<IBOMItemWithSpecs | null>(null);
 
-  // 加载 L3 配料数据（按 variant_id 筛选）
-  const { data: bomData, isLoading } = useList<IBOMItem>({
+  // 加载 L3 配料数据（按 variantId 筛选）
+  const { data: bomData, isLoading } = useList<IBOMItemWithSpecs>({
     resource: "bom_items",
-    filters: [{ field: "variant_id", operator: "eq", value: variantId }],
+    filters: [{ field: "variantId", operator: "eq", value: variantId }],
     pagination: { pageSize: 100 }, // 加载所有配料
   });
 
@@ -147,7 +147,7 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
         resource: "bom_items",
         values: {
           ...record,
-          variant_id: variantId, // 确保关联正确的颜色版本
+          variantId: variantId, // 确保关联正确的颜色版本
         },
         successNotification: {
           message: "添加成功",
@@ -177,7 +177,7 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
    * 渲染 L4 规格明细聚合显示
    * 关键实现：将 specDetails 数组映射为堆叠的文本块
    */
-  const renderSpecDetails = (specDetails: ISpecDetail[], record: IBOMItem) => {
+  const renderSpecDetails = (specDetails: ISpecDetail[] | undefined, record: IBOMItemWithSpecs) => {
     if (!specDetails || specDetails.length === 0) {
       return (
         <div className="text-center">
@@ -210,9 +210,9 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
               )}
               {/* 规格值和单位 */}
               <span className="font-medium text-gray-800">
-                {spec.spec_value}
+                {spec.specValue}
               </span>
-              <span className="text-gray-500 text-sm">{spec.spec_unit}</span>
+              <span className="text-gray-500 text-sm">{spec.specUnit}</span>
             </div>
           ))}
         </div>
@@ -242,14 +242,14 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
           </h3>
         </div>
 
-        <EditableProTable<IBOMItem>
+        <EditableProTable<IBOMItemWithSpecs>
           rowKey="id"
           loading={isLoading}
           value={dataSource}
           columns={[
             {
               title: "辅料名称",
-              dataIndex: "material_name",
+              dataIndex: "materialName",
               width: 180,
               formItemProps: {
                 rules: [{ required: true, message: "请输入辅料名称" }],
@@ -257,7 +257,7 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
             },
             {
               title: "辅料图片",
-              dataIndex: "material_image_url",
+              dataIndex: "materialImageUrl",
               width: 120,
               render: (url) => {
                 if (!url) {
@@ -279,14 +279,14 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
               renderFormItem: (_, { record, recordKey }, form) => {
                 return (
                   <MaterialImageUploader
-                    value={record?.material_image_url}
+                    value={record?.materialImageUrl}
                     onChange={(url) => {
                       if (record && recordKey !== undefined) {
-                        record.material_image_url = url;
+                        record.materialImageUrl = url;
                         form?.setFieldsValue({
                           [recordKey as string]: {
                             ...record,
-                            material_image_url: url,
+                            materialImageUrl: url,
                           },
                         });
                       }
@@ -297,32 +297,32 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
             },
             {
               title: "辅料颜色",
-              dataIndex: "material_color_text", // 使用真实字段名
+              dataIndex: "materialColorText", // 使用真实字段名
               width: 250,
               render: (_, record) => (
                 <MaterialColorDisplay
-                  text={record.material_color_text}
-                  imageUrl={record.material_color_image_url}
+                  text={record.materialColorText}
+                  imageUrl={record.materialColorImageUrl}
                 />
               ),
               renderFormItem: (_, { record, recordKey }, form) => {
                 return (
                   <MaterialColorEditor
                     value={{
-                      text: record?.material_color_text,
-                      imageUrl: record?.material_color_image_url,
+                      text: record?.materialColorText,
+                      imageUrl: record?.materialColorImageUrl,
                     }}
                     onChange={(value) => {
                       // 使用表单实例更新值（确保被追踪）
                       if (record && recordKey !== undefined) {
-                        record.material_color_text = value.text;
-                        record.material_color_image_url = value.imageUrl;
+                        record.materialColorText = value.text;
+                        record.materialColorImageUrl = value.imageUrl;
                         // 触发表单值变化
                         form?.setFieldsValue({
                           [recordKey as string]: {
                             ...record,
-                            material_color_text: value.text,
-                            material_color_image_url: value.imageUrl,
+                            materialColorText: value.text,
+                            materialColorImageUrl: value.imageUrl,
                           },
                         });
                       }
@@ -334,7 +334,7 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
             // 隐藏字段：辅料颜色图片URL（用于保存数据）
             {
               title: "色卡图片",
-              dataIndex: "material_color_image_url",
+              dataIndex: "materialColorImageUrl",
               hideInTable: true, // 表格中隐藏
               editable: false,   // 不可编辑（通过上面的颜色列编辑）
             },
@@ -402,11 +402,14 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
             creatorButtonText: "添加配料",
             record: () => ({
               id: Date.now(), // 临时ID
-              variant_id: variantId,
-              material_name: "",
-              material_image_url: "", // 让用户自己上传
+              variantId: variantId,
+              materialName: "",
+              materialImageUrl: "", // 让用户自己上传
               usage: 1,
               unit: "条",
+              sortOrder: 0,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
               specDetails: [],
             }),
           }}

@@ -11,7 +11,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 export class CreateSpecDetailDto {
   @ApiProperty({ description: '所属配料明细ID' })
   @IsInt()
-  bom_item_id: number;
+  bomItemId: number;
 
   @ApiPropertyOptional({ description: '尺码', example: 'M' })
   @IsOptional()
@@ -23,17 +23,17 @@ export class CreateSpecDetailDto {
   @IsString()
   @MinLength(1)
   @MaxLength(50)
-  spec_value: string;
+  specValue: string;
 
   @ApiProperty({ description: '规格单位', example: 'cm' })
   @IsString()
   @MinLength(1)
   @MaxLength(20)
-  spec_unit: string;
+  specUnit: string;
 
   @ApiPropertyOptional({ description: '排序顺序' })
   @IsOptional()
   @IsInt()
   @Min(0)
-  sort_order?: number;
+  sortOrder?: number;
 }

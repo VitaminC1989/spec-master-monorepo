@@ -9,7 +9,7 @@
 import React from "react";
 import { Modal, Form, Input, Select, message } from "antd";
 import { useCreate, useInvalidate, useList } from "@refinedev/core";
-import type { IStyle, ICustomer } from "../../types/models";
+import type { IStyle, ICustomer } from "../../types/legacy";
 import dayjs from "dayjs";
 
 interface CreateStyleModalProps {
@@ -46,17 +46,18 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
       .then((values) => {
         // 查找选中的客户名称
         const selectedCustomer = customersData?.data?.find(
-          (c) => c.id === values.customer_id
+          (c) => c.id === values.customerId
         );
 
         // 构造款号数据（创建日期自动生成）
         const newStyle: Omit<IStyle, "id"> = {
-          style_no: values.style_no,
-          style_name: values.style_name,
-          customer_id: values.customer_id,
-          customer_name: selectedCustomer?.customer_name,
-          create_date: dayjs().format("YYYY-MM-DD"), // 当前日期
-          public_note: values.public_note || "",
+          styleNo: values.styleNo,
+          styleName: values.styleName,
+          customerId: values.customerId,
+          customerName: selectedCustomer?.customerName,
+          createdAt: dayjs().toISOString(), // 当前日期
+          updatedAt: dayjs().toISOString(),
+          publicNote: values.publicNote || "",
         };
 
         // 调用创建 API
@@ -66,7 +67,7 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
             values: newStyle,
             successNotification: {
               message: "创建成功",
-              description: `款号"${values.style_no}"已创建`,
+              description: `款号"${values.styleNo}"已创建`,
               type: "success",
             },
             errorNotification: {
@@ -140,7 +141,7 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
           {/* 关联客户字段（必填）*/}
           <Form.Item
             label="关联客户"
-            name="customer_id"
+            name="customerId"
             rules={[{ required: true, message: "请选择关联客户" }]}
             tooltip="选择该款号所属的客户"
           >
@@ -150,7 +151,7 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
               showSearch
               optionFilterProp="label"
               options={customersData?.data?.map((customer) => ({
-                label: customer.customer_name,
+                label: customer.customerName,
                 value: customer.id,
               }))}
             />
@@ -159,7 +160,7 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
           {/* 款号字段（必填）*/}
           <Form.Item
             label="款号"
-            name="style_no"
+            name="styleNo"
             rules={[
               { required: true, message: "请输入款号" },
               { max: 20, message: "款号不能超过 20 个字符" },
@@ -180,7 +181,7 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
           {/* 款式名称字段（可选）*/}
           <Form.Item
             label="款式名称"
-            name="style_name"
+            name="styleName"
             rules={[{ max: 50, message: "款式名称不能超过 50 个字符" }]}
             tooltip="对款号的描述性名称"
           >
@@ -194,7 +195,7 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
           {/* 公共备注字段（可选）*/}
           <Form.Item
             label="公共备注"
-            name="public_note"
+            name="publicNote"
             rules={[{ max: 200, message: "备注不能超过 200 个字符" }]}
             tooltip="所有颜色版本共用的备注信息"
           >

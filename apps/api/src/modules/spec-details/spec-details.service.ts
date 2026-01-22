@@ -27,7 +27,7 @@ export class SpecDetailsService {
     ]);
 
     return {
-      data: data.map((item) => this.transformToSnakeCase(item)),
+      data,
       total,
     };
   }
@@ -41,21 +41,21 @@ export class SpecDetailsService {
       throw new NotFoundException(`规格明细 #${id} 不存在`);
     }
 
-    return { data: this.transformToSnakeCase(specDetail) };
+    return { data: specDetail };
   }
 
   async create(dto: CreateSpecDetailDto) {
     const specDetail = await this.prisma.specDetail.create({
       data: {
-        bomItemId: dto.bom_item_id,
+        bomItemId: dto.bomItemId,
         size: dto.size,
-        specValue: dto.spec_value,
-        specUnit: dto.spec_unit,
-        sortOrder: dto.sort_order ?? 0,
+        specValue: dto.specValue,
+        specUnit: dto.specUnit,
+        sortOrder: dto.sortOrder ?? 0,
       },
     });
 
-    return { data: this.transformToSnakeCase(specDetail) };
+    return { data: specDetail };
   }
 
   async update(id: number, dto: UpdateSpecDetailDto) {
@@ -66,13 +66,13 @@ export class SpecDetailsService {
       where: { id },
       data: {
         size: dto.size,
-        specValue: dto.spec_value,
-        specUnit: dto.spec_unit,
-        sortOrder: dto.sort_order,
+        specValue: dto.specValue,
+        specUnit: dto.specUnit,
+        sortOrder: dto.sortOrder,
       },
     });
 
-    return { data: this.transformToSnakeCase(specDetail) };
+    return { data: specDetail };
   }
 
   async remove(id: number) {
@@ -85,18 +85,5 @@ export class SpecDetailsService {
     });
 
     return existing;
-  }
-
-  private transformToSnakeCase(specDetail: any) {
-    return {
-      id: specDetail.id,
-      bom_item_id: specDetail.bomItemId,
-      size: specDetail.size,
-      spec_value: specDetail.specValue,
-      spec_unit: specDetail.specUnit,
-      sort_order: specDetail.sortOrder,
-      created_at: specDetail.createdAt?.toISOString(),
-      updated_at: specDetail.updatedAt?.toISOString(),
-    };
   }
 }

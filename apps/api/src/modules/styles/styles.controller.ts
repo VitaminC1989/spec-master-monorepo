@@ -17,7 +17,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { StylesService } from './styles.service';
-import { CreateStyleDto, UpdateStyleDto } from './dto';
+import { CreateStyleDto, UpdateStyleDto, StyleResponseDto, StyleListResponseDto } from './dto';
 import {
   ParseFiltersPipe,
   ParsePaginationPipe,
@@ -40,7 +40,7 @@ export class StylesController {
     required: false,
     description: 'Refine pagination JSON',
   })
-  @ApiResponse({ status: 200, description: '返回款号列表和总数' })
+  @ApiResponse({ status: 200, description: '返回款号列表和总数', type: StyleListResponseDto })
   async findAll(
     @Query('filters', ParseFiltersPipe) filters: any[],
     @Query('pagination', ParsePaginationPipe)
@@ -52,7 +52,7 @@ export class StylesController {
   @Get(':id')
   @ApiOperation({ summary: '获取款号详情' })
   @ApiParam({ name: 'id', type: Number, description: '款号ID' })
-  @ApiResponse({ status: 200, description: '返回款号详情（含颜色版本）' })
+  @ApiResponse({ status: 200, description: '返回款号详情（含颜色版本）', type: StyleResponseDto })
   @ApiResponse({ status: 404, description: '款号不存在' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.stylesService.findOne(id);
@@ -60,7 +60,7 @@ export class StylesController {
 
   @Post()
   @ApiOperation({ summary: '创建款号' })
-  @ApiResponse({ status: 201, description: '款号创建成功' })
+  @ApiResponse({ status: 201, description: '款号创建成功', type: StyleResponseDto })
   async create(@Body() createStyleDto: CreateStyleDto) {
     return this.stylesService.create(createStyleDto);
   }
@@ -68,7 +68,7 @@ export class StylesController {
   @Put(':id')
   @ApiOperation({ summary: '更新款号' })
   @ApiParam({ name: 'id', type: Number, description: '款号ID' })
-  @ApiResponse({ status: 200, description: '款号更新成功' })
+  @ApiResponse({ status: 200, description: '款号更新成功', type: StyleResponseDto })
   @ApiResponse({ status: 404, description: '款号不存在' })
   async update(
     @Param('id', ParseIntPipe) id: number,

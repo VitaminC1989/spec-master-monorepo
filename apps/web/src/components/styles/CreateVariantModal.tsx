@@ -10,7 +10,7 @@ import React, { useState } from "react";
 import { Modal, Form, Input, message, Upload, Image, Select } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useCreate, useInvalidate, useList } from "@refinedev/core";
-import type { IColorVariant, ISize } from "../../types/models";
+import type { IColorVariant, ISize } from "../../types/legacy";
 import { uploadToQiniu } from "../../utils/qiniuUpload";
 
 interface CreateVariantModalProps {
@@ -38,13 +38,13 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
   const { data: sizesData, isLoading: isSizesLoading } = useList<ISize>({
     resource: "sizes",
     pagination: { mode: "off" },
-    sorters: [{ field: "sort_order", order: "asc" }],
+    sorters: [{ field: "sortOrder", order: "asc" }],
   });
 
   const sizeOptions =
     sizesData?.data?.map((size) => ({
-      label: size.size_code,
-      value: size.size_code,
+      label: size.sizeCode,
+      value: size.sizeCode,
     })) || [];
 
   /**
@@ -93,14 +93,17 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
       .then((values) => {
         // 构造颜色版本数据
         const newVariant: Omit<IColorVariant, "id"> = {
-          style_id: styleId,
-          color_name: values.color_name,
+          styleId: styleId,
+          colorName: values.colorName,
           // 将多选数组转换为 S/M/L 格式的字符串
-          size_range: Array.isArray(values.size_range)
-            ? values.size_range.join("/")
-            : values.size_range || "",
+          sizeRange: Array.isArray(values.sizeRange)
+            ? values.sizeRange.join("/")
+            : values.sizeRange || "",
           // 使用上传的图片，如果没有则为空（不使用默认图）
-          sample_image_url: imageUrl || "",
+          sampleImageUrl: imageUrl || "",
+          sortOrder: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
 
         // 调用创建 API
@@ -110,7 +113,7 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
             values: newVariant,
             successNotification: {
               message: "创建成功",
-              description: `颜色版本"${values.color_name}"已创建`,
+              description: `颜色版本"${values.colorName}"已创建`,
               type: "success",
             },
             errorNotification: {
@@ -184,7 +187,7 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
           {/* 颜色名称字段（必填）*/}
           <Form.Item
             label="颜色名称"
-            name="color_name"
+            name="colorName"
             rules={[
               { required: true, message: "请输入颜色名称" },
               { max: 20, message: "颜色名称不能超过 20 个字符" },
@@ -201,7 +204,7 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
           {/* 尺码范围字段（多选）*/}
           <Form.Item
             label="尺码范围"
-            name="size_range"
+            name="sizeRange"
             tooltip="选择该颜色版本包含的尺码范围"
           >
             <Select

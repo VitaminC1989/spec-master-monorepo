@@ -12,25 +12,25 @@ export class CreateCustomerDto {
   @IsString()
   @MinLength(1)
   @MaxLength(100)
-  customer_name: string;
+  customerName: string;
 
   @ApiPropertyOptional({ description: '联系人', maxLength: 50 })
   @IsOptional()
   @IsString()
   @MaxLength(50)
-  contact_person?: string;
+  contactPerson?: string;
 
   @ApiPropertyOptional({ description: '联系电话', maxLength: 30 })
   @IsOptional()
   @IsString()
   @MaxLength(30)
-  contact_phone?: string;
+  contactPhone?: string;
 
   @ApiPropertyOptional({ description: '联系邮箱', maxLength: 100 })
   @IsOptional()
   @IsEmail({}, { message: '邮箱格式不正确' })
   @MaxLength(100)
-  contact_email?: string;
+  contactEmail?: string;
 
   @ApiPropertyOptional({ description: '地址' })
   @IsOptional()

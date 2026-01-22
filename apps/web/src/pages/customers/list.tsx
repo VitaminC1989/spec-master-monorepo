@@ -10,7 +10,7 @@ import { Button, Modal, Form, Input, message, Space } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from "@ant-design/icons";
 import { useDelete, useCreate, useInvalidate } from "@refinedev/core";
 import { useNavigate } from "react-router-dom";
-import type { ICustomer } from "../../types/models";
+import type { ICustomer } from "../../types/legacy";
 import dayjs from "dayjs";
 
 export const CustomerList: React.FC = () => {
@@ -40,7 +40,7 @@ export const CustomerList: React.FC = () => {
   const handleDelete = (record: ICustomer) => {
     Modal.confirm({
       title: "确认删除",
-      content: `确定要删除客户"${record.customer_name}"吗？`,
+      content: `确定要删除客户"${record.customerName}"吗？`,
       okText: "确认删除",
       okType: "danger",
       cancelText: "取消",
@@ -78,7 +78,7 @@ export const CustomerList: React.FC = () => {
         columns={[
           {
             title: "客户名称",
-            dataIndex: "customer_name",
+            dataIndex: "customerName",
             width: 250,
             render: (text, record) => (
               <a
@@ -91,17 +91,17 @@ export const CustomerList: React.FC = () => {
           },
           {
             title: "联系人",
-            dataIndex: "contact_person",
+            dataIndex: "contactPerson",
             width: 120,
           },
           {
             title: "联系电话",
-            dataIndex: "contact_phone",
+            dataIndex: "contactPhone",
             width: 150,
           },
           {
             title: "联系邮箱",
-            dataIndex: "contact_email",
+            dataIndex: "contactEmail",
             width: 200,
           },
           {
@@ -111,7 +111,7 @@ export const CustomerList: React.FC = () => {
           },
           {
             title: "创建日期",
-            dataIndex: "create_date",
+            dataIndex: "createDate",
             width: 120,
           },
           {
@@ -164,18 +164,18 @@ export const CustomerList: React.FC = () => {
         <Form {...editFormProps} layout="vertical">
           <Form.Item
             label="客户名称"
-            name="customer_name"
+            name="customerName"
             rules={[{ required: true, message: "请输入客户名称" }]}
           >
             <Input placeholder="请输入客户名称" />
           </Form.Item>
-          <Form.Item label="联系人" name="contact_person">
+          <Form.Item label="联系人" name="contactPerson">
             <Input placeholder="请输入联系人" />
           </Form.Item>
-          <Form.Item label="联系电话" name="contact_phone">
+          <Form.Item label="联系电话" name="contactPhone">
             <Input placeholder="请输入联系电话" />
           </Form.Item>
-          <Form.Item label="联系邮箱" name="contact_email">
+          <Form.Item label="联系邮箱" name="contactEmail">
             <Input placeholder="请输入联系邮箱" />
           </Form.Item>
           <Form.Item label="地址" name="address">
@@ -208,7 +208,7 @@ const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
     form.validateFields().then((values) => {
       const newCustomer = {
         ...values,
-        create_date: dayjs().format("YYYY-MM-DD"),
+        createDate: dayjs().format("YYYY-MM-DD"),
       };
 
       createCustomer(
@@ -242,18 +242,18 @@ const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
       <Form form={form} layout="vertical">
         <Form.Item
           label="客户名称"
-          name="customer_name"
+          name="customerName"
           rules={[{ required: true, message: "请输入客户名称" }]}
         >
           <Input placeholder="请输入客户名称" />
         </Form.Item>
-        <Form.Item label="联系人" name="contact_person">
+        <Form.Item label="联系人" name="contactPerson">
           <Input placeholder="请输入联系人" />
         </Form.Item>
-        <Form.Item label="联系电话" name="contact_phone">
+        <Form.Item label="联系电话" name="contactPhone">
           <Input placeholder="请输入联系电话" />
         </Form.Item>
-        <Form.Item label="联系邮箱" name="contact_email">
+        <Form.Item label="联系邮箱" name="contactEmail">
           <Input placeholder="请输入联系邮箱" />
         </Form.Item>
         <Form.Item label="地址" name="address">

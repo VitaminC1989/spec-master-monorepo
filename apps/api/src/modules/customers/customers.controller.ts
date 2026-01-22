@@ -17,7 +17,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { CustomersService } from './customers.service';
-import { CreateCustomerDto, UpdateCustomerDto } from './dto';
+import { CreateCustomerDto, UpdateCustomerDto, CustomerResponseDto, CustomerListResponseDto } from './dto';
 import {
   ParseFiltersPipe,
   ParsePaginationPipe,
@@ -40,7 +40,7 @@ export class CustomersController {
     required: false,
     description: 'Refine pagination JSON',
   })
-  @ApiResponse({ status: 200, description: '返回客户列表和总数' })
+  @ApiResponse({ status: 200, description: '返回客户列表和总数', type: CustomerListResponseDto })
   async findAll(
     @Query('filters', ParseFiltersPipe) filters: any[],
     @Query('pagination', ParsePaginationPipe)
@@ -52,7 +52,7 @@ export class CustomersController {
   @Get(':id')
   @ApiOperation({ summary: '获取客户详情' })
   @ApiParam({ name: 'id', type: Number, description: '客户ID' })
-  @ApiResponse({ status: 200, description: '返回客户详情' })
+  @ApiResponse({ status: 200, description: '返回客户详情', type: CustomerResponseDto })
   @ApiResponse({ status: 404, description: '客户不存在' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.customersService.findOne(id);
@@ -60,7 +60,7 @@ export class CustomersController {
 
   @Post()
   @ApiOperation({ summary: '创建客户' })
-  @ApiResponse({ status: 201, description: '客户创建成功' })
+  @ApiResponse({ status: 201, description: '客户创建成功', type: CustomerResponseDto })
   async create(@Body() createCustomerDto: CreateCustomerDto) {
     return this.customersService.create(createCustomerDto);
   }
@@ -68,7 +68,7 @@ export class CustomersController {
   @Put(':id')
   @ApiOperation({ summary: '更新客户' })
   @ApiParam({ name: 'id', type: Number, description: '客户ID' })
-  @ApiResponse({ status: 200, description: '客户更新成功' })
+  @ApiResponse({ status: 200, description: '客户更新成功', type: CustomerResponseDto })
   @ApiResponse({ status: 404, description: '客户不存在' })
   async update(
     @Param('id', ParseIntPipe) id: number,

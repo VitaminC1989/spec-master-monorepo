@@ -4,7 +4,10 @@
  */
 
 import { DataProvider } from "@refinedev/core";
-import type { ICloneVariantResponse } from "../types/models";
+import type { components } from "@spec/types";
+
+// 定义类型别名
+type CloneVariantResponseDto = components["schemas"]["CloneVariantResponseDto"];
 
 // 后端 API 基础 URL（使用相对路径，通过 vite 代理转发）
 const API_BASE_URL = "/api";
@@ -57,32 +60,43 @@ async function request<T>(
  */
 export const apiDataProvider: DataProvider = {
   /**
-   * 获取资源列表
+   * 获取资源列表 - 使用 POST /search 端点
    */
   getList: async ({ resource, filters, pagination, sorters }) => {
     console.log(`[API] getList: ${resource}`, { filters, pagination });
 
     const apiPath = getApiPath(resource);
-    const params = new URLSearchParams();
 
-    // 构建 filters 参数
-    if (filters && filters.length > 0) {
-      params.append("filters", JSON.stringify(filters));
-    }
+    // 构建 POST 请求体
+    const searchRequest = {
+      filters: filters?.map(f => {
+        // 处理 LogicalFilter 和 ConditionalFilter
+        if ('field' in f) {
+          return {
+            field: f.field,
+            operator: f.operator,
+            value: f.value,
+          };
+        }
+        // 处理其他类型的 filter
+        return f;
+      }),
+      pagination: pagination ? {
+        current: pagination.current,
+        pageSize: pagination.pageSize,
+      } : undefined,
+      sorters: sorters?.map(s => ({
+        field: s.field,
+        order: s.order,
+      })),
+    };
 
-    // 构建 pagination 参数
-    if (pagination) {
-      params.append(
-        "pagination",
-        JSON.stringify({
-          current: pagination.current,
-          pageSize: pagination.pageSize,
-        })
-      );
-    }
-
-    const url = `${API_BASE_URL}/${apiPath}?${params.toString()}`;
-    const result = await request<{ data: any[]; total: number }>(url);
+    // 使用 POST /search
+    const url = `${API_BASE_URL}/${apiPath}/search`;
+    const result = await request<{ data: any[]; total: number }>(url, {
+      method: "POST",
+      body: JSON.stringify(searchRequest),
+    });
 
     return {
       data: result.data,
@@ -171,7 +185,7 @@ export const apiDataProvider: DataProvider = {
     const results = await Promise.all(promises);
 
     return {
-      data: results.map((r) => r.data),
+      data: results.map((r) => r.data) as any,
     };
   },
 
@@ -187,7 +201,7 @@ export const apiDataProvider: DataProvider = {
     const results = await Promise.all(promises);
 
     return {
-      data: results.map((r) => r.data),
+      data: results.map((r) => r.data) as any,
     };
   },
 
@@ -203,7 +217,7 @@ export const apiDataProvider: DataProvider = {
     const results = await Promise.all(promises);
 
     return {
-      data: results.map((r) => r.data),
+      data: results.map((r) => r.data) as any,
     };
   },
 
@@ -221,7 +235,7 @@ export const apiDataProvider: DataProvider = {
 
     if (cloneMatch && method === "post") {
       const fullUrl = `${API_BASE_URL}/styles/${cloneMatch[1]}/variants/${cloneMatch[2]}/clone`;
-      const result = await request<{ data: ICloneVariantResponse }>(fullUrl, {
+      const result = await request<{ data: CloneVariantResponseDto }>(fullUrl, {
         method: "POST",
         body: JSON.stringify(payload),
       });

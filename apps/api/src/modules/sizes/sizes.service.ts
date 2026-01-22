@@ -27,7 +27,7 @@ export class SizesService {
     ]);
 
     return {
-      data: data.map((item) => this.transformToSnakeCase(item)),
+      data,
       total,
     };
   }
@@ -37,20 +37,20 @@ export class SizesService {
     if (!size) {
       throw new NotFoundException(`尺码 #${id} 不存在`);
     }
-    return { data: this.transformToSnakeCase(size) };
+    return { data: size };
   }
 
   async create(dto: CreateSizeDto) {
     const size = await this.prisma.size.create({
       data: {
-        sizeCode: dto.size_code,
-        sizeName: dto.size_name,
-        sortOrder: dto.sort_order ?? 0,
+        sizeCode: dto.sizeCode,
+        sizeName: dto.sizeName,
+        sortOrder: dto.sortOrder ?? 0,
         note: dto.note,
-        isActive: dto.is_active ?? true,
+        isActive: dto.isActive ?? true,
       },
     });
-    return { data: this.transformToSnakeCase(size) };
+    return { data: size };
   }
 
   async update(id: number, dto: UpdateSizeDto) {
@@ -58,30 +58,19 @@ export class SizesService {
     const size = await this.prisma.size.update({
       where: { id },
       data: {
-        sizeCode: dto.size_code,
-        sizeName: dto.size_name,
-        sortOrder: dto.sort_order,
+        sizeCode: dto.sizeCode,
+        sizeName: dto.sizeName,
+        sortOrder: dto.sortOrder,
         note: dto.note,
-        isActive: dto.is_active,
+        isActive: dto.isActive,
       },
     });
-    return { data: this.transformToSnakeCase(size) };
+    return { data: size };
   }
 
   async remove(id: number) {
     const existing = await this.findOne(id);
     await this.prisma.size.delete({ where: { id } });
     return existing;
-  }
-
-  private transformToSnakeCase(size: any) {
-    return {
-      id: size.id,
-      size_code: size.sizeCode,
-      size_name: size.sizeName,
-      sort_order: size.sortOrder,
-      note: size.note,
-      is_active: size.isActive,
-    };
   }
 }

@@ -9,7 +9,7 @@ import { ProTable } from "@ant-design/pro-components";
 import { Button, Modal, Form, Input, InputNumber, Switch, message, Space, Tag } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useDelete } from "@refinedev/core";
-import type { ISize } from "../../types/models";
+import type { ISize } from "../../types/legacy";
 
 export const SizeList: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -18,7 +18,7 @@ export const SizeList: React.FC = () => {
   const { tableProps } = useTable<ISize>({
     resource: "sizes",
     pagination: { pageSize: 20 },
-    sorters: { initial: [{ field: "sort_order", order: "asc" }] },
+    sorters: { initial: [{ field: "sortOrder", order: "asc" }] },
   });
 
   // 编辑表单
@@ -38,7 +38,7 @@ export const SizeList: React.FC = () => {
   const handleDelete = (record: ISize) => {
     Modal.confirm({
       title: "确认删除",
-      content: `确定要删除尺码"${record.size_code}"吗？`,
+      content: `确定要删除尺码"${record.sizeCode}"吗？`,
       okText: "确认删除",
       okType: "danger",
       cancelText: "取消",
@@ -76,7 +76,7 @@ export const SizeList: React.FC = () => {
         columns={[
           {
             title: "尺码代码",
-            dataIndex: "size_code",
+            dataIndex: "sizeCode",
             width: 150,
             render: (text) => (
               <Tag color="blue" className="text-base px-3 py-1">
@@ -86,19 +86,19 @@ export const SizeList: React.FC = () => {
           },
           {
             title: "尺码名称",
-            dataIndex: "size_name",
+            dataIndex: "sizeName",
             width: 150,
             render: (text) => <span className="font-medium">{text}</span>,
           },
           {
             title: "排序",
-            dataIndex: "sort_order",
+            dataIndex: "sortOrder",
             width: 100,
             sorter: true,
           },
           {
             title: "状态",
-            dataIndex: "is_active",
+            dataIndex: "isActive",
             width: 100,
             render: (active) => (
               <Tag color={active ? "green" : "red"}>
@@ -154,22 +154,22 @@ export const SizeList: React.FC = () => {
         <Form {...editFormProps} layout="vertical">
           <Form.Item
             label="尺码代码"
-            name="size_code"
+            name="sizeCode"
             rules={[{ required: true, message: "请输入尺码代码" }]}
           >
             <Input placeholder="如：S, M, L" />
           </Form.Item>
           <Form.Item
             label="尺码名称"
-            name="size_name"
+            name="sizeName"
             rules={[{ required: true, message: "请输入尺码名称" }]}
           >
             <Input placeholder="如：小号、中号" />
           </Form.Item>
-          <Form.Item label="排序序号" name="sort_order">
+          <Form.Item label="排序序号" name="sortOrder">
             <InputNumber placeholder="数字越小越靠前" style={{ width: "100%" }} />
           </Form.Item>
-          <Form.Item label="是否启用" name="is_active" valuePropName="checked">
+          <Form.Item label="是否启用" name="isActive" valuePropName="checked">
             <Switch />
           </Form.Item>
           <Form.Item label="备注" name="note">
@@ -202,7 +202,7 @@ const CreateSizeModal: React.FC<CreateSizeModalProps> = ({
     form.validateFields().then((values) => {
       const newSize = {
         ...values,
-        is_active: values.is_active !== false, // 默认启用
+        isActive: values.isActive !== false, // 默认启用
       };
       
       createSize(
@@ -229,25 +229,25 @@ const CreateSizeModal: React.FC<CreateSizeModalProps> = ({
       okText="创建"
       cancelText="取消"
     >
-      <Form form={form} layout="vertical" initialValues={{ is_active: true }}>
+      <Form form={form} layout="vertical" initialValues={{ isActive: true }}>
         <Form.Item
           label="尺码代码"
-          name="size_code"
+          name="sizeCode"
           rules={[{ required: true, message: "请输入尺码代码" }]}
         >
           <Input placeholder="如：S, M, L, XL" />
         </Form.Item>
         <Form.Item
           label="尺码名称"
-          name="size_name"
+          name="sizeName"
           rules={[{ required: true, message: "请输入尺码名称" }]}
         >
           <Input placeholder="如：小号、中号、大号" />
         </Form.Item>
-        <Form.Item label="排序序号" name="sort_order">
+        <Form.Item label="排序序号" name="sortOrder">
           <InputNumber placeholder="数字越小越靠前" style={{ width: "100%" }} />
         </Form.Item>
-        <Form.Item label="是否启用" name="is_active" valuePropName="checked">
+        <Form.Item label="是否启用" name="isActive" valuePropName="checked">
           <Switch defaultChecked />
         </Form.Item>
         <Form.Item label="备注" name="note">

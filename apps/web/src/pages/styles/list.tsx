@@ -10,7 +10,7 @@ import { Space, Button, Tag, Modal, message } from "antd";
 import { EyeOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useDelete } from "@refinedev/core";
-import type { IStyle } from "../../types/models";
+import type { IStyle } from "../../types/legacy";
 import { CreateStyleModal } from "../../components/styles/CreateStyleModal";
 
 export const StyleList: React.FC = () => {
@@ -38,7 +38,7 @@ export const StyleList: React.FC = () => {
       title: "确认删除",
       content: (
         <div>
-          <p>确定要删除款号 <strong>{record.style_no}</strong> 吗？</p>
+          <p>确定要删除款号 <strong>{record.styleNo}</strong> 吗？</p>
           <p className="text-red-500 text-sm">
             ⚠️ 此操作将同时删除该款号下的所有颜色版本和配料数据，且无法恢复！
           </p>
@@ -54,7 +54,7 @@ export const StyleList: React.FC = () => {
             id: record.id,
             successNotification: {
               message: "删除成功",
-              description: `款号"${record.style_no}"已删除`,
+              description: `款号"${record.styleNo}"已删除`,
               type: "success",
             },
           },
@@ -97,8 +97,8 @@ export const StyleList: React.FC = () => {
         columns={[
           {
             title: "款号",
-            dataIndex: "style_no",
-            key: "style_no",
+            dataIndex: "styleNo",
+            key: "styleNo",
             width: 150,
             render: (text) => (
               <Tag color="blue" className="text-base px-3 py-1">
@@ -108,8 +108,8 @@ export const StyleList: React.FC = () => {
           },
           {
             title: "款式名称",
-            dataIndex: "style_name",
-            key: "style_name",
+            dataIndex: "styleName",
+            key: "styleName",
             width: 200,
             render: (text) => (
               <span className="font-medium text-gray-800">{text || "-"}</span>
@@ -117,8 +117,8 @@ export const StyleList: React.FC = () => {
           },
           {
             title: "客户名称",
-            dataIndex: "customer_name",
-            key: "customer_name",
+            dataIndex: "customerName",
+            key: "customerName",
             width: 150,
             render: (text) => (
               <span className="text-gray-700">{text || "-"}</span>
@@ -126,15 +126,15 @@ export const StyleList: React.FC = () => {
           },
           {
             title: "创建日期",
-            dataIndex: "create_date",
-            key: "create_date",
+            dataIndex: "createDate",
+            key: "createDate",
             width: 150,
             render: (text) => <span className="text-gray-600">{text}</span>,
           },
           {
             title: "公共备注",
-            dataIndex: "public_note",
-            key: "public_note",
+            dataIndex: "publicNote",
+            key: "publicNote",
             ellipsis: true,
             render: (text) => (
               <span className="text-gray-500">{text || "无备注"}</span>
