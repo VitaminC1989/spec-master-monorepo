@@ -25,3 +25,6 @@ dist-ssr
 
 # Turborepo 缓存
 .turbo/*
+
+# claude
+**/.claude/*
