@@ -195,8 +195,6 @@ const CreateUnitModal: React.FC<CreateUnitModalProps> = ({ open, onClose }) => {
       const newUnit = {
         ...values,
         isActive: values.isActive !== false, // 默认启用
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       };
 
       createUnit(
