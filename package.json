@@ -5,7 +5,14 @@
   "packageManager": "pnpm@10.27.0",
   "scripts": {
     "dev": "turbo run dev",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docker:build:api:amd64": "bash -c 'docker build --platform linux/amd64 -f Dockerfile.api -t ididiid/spec-api:${1:-latest}-amd64 .' --",
+    "docker:push:api:amd64": "bash -c 'docker push ididiid/spec-api:${1:-latest}-amd64' --",
+    "docker:deploy:api:amd64": "bash -c 'pnpm docker:build:api:amd64 $1 && pnpm docker:push:api:amd64 $1' --",
+    "docker:build:web:amd64": "bash -c 'docker build --platform linux/amd64 -f Dockerfile.web -t ididiid/spec-web:${1:-latest}-amd64 .' --",
+    "docker:push:web:amd64": "bash -c 'docker push ididiid/spec-web:${1:-latest}-amd64' --",
+    "docker:deploy:web:amd64": "bash -c 'pnpm docker:build:web:amd64 $1 && pnpm docker:push:web:amd64 $1' --",
+    "start:api:dist": "bash -c 'env $(cat apps/api/.env apps/api/.env.local | grep -v \"^#\" | xargs) node apps/api/dist/src/main.js'"
   },
   "keywords": [],
   "author": "",
@@ -13,5 +20,8 @@
   "description": "",
   "devDependencies": {
     "turbo": "^2.7.3"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3"
   }
 }
