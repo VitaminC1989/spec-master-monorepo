@@ -7,12 +7,12 @@
 import React, { useState, useEffect } from "react";
 import { Card, Descriptions, Button, Modal, Form, Input, Select, message, Space } from "antd";
 import { EditOutlined, ShoppingCartOutlined } from "@ant-design/icons";
-import { useUpdate, useInvalidate, useList } from "@refinedev/core";
-import type { IStyle, ICustomer } from "../../types/legacy";
+import { useUpdate, useInvalidate, useList, HttpError } from "@refinedev/core";
+import type { StyleRead, StyleUpdate, CustomerRead } from "../../types/api";
 import { OrderModal } from "./OrderModal";
 
 interface StyleHeaderInfoProps {
-  style?: IStyle;
+  style?: StyleRead;
 }
 
 export const StyleHeaderInfo: React.FC<StyleHeaderInfoProps> = ({ style }) => {
@@ -20,14 +20,14 @@ export const StyleHeaderInfo: React.FC<StyleHeaderInfoProps> = ({ style }) => {
   const [orderModalOpen, setOrderModalOpen] = useState(false);
   const [form] = Form.useForm();
 
-  // 用于更新款号的 Hook
-  const { mutate: updateStyle, isLoading } = useUpdate();
+  // 用于更新款号的 Hook（使用读写分离泛型）
+  const { mutate: updateStyle, isLoading } = useUpdate<StyleRead, HttpError, StyleUpdate>();
 
   // 用于刷新数据的钩子
   const invalidate = useInvalidate();
 
   // 加载客户列表
-  const { data: customersData } = useList<ICustomer>({
+  const { data: customersData } = useList<CustomerRead>({
     resource: "customers",
     pagination: {
       pageSize: 1000,
@@ -55,17 +55,11 @@ export const StyleHeaderInfo: React.FC<StyleHeaderInfoProps> = ({ style }) => {
     form
       .validateFields()
       .then((values) => {
-        // 查找选中的客户名称
-        const selectedCustomer = customersData?.data?.find(
-          (c) => c.id === values.customerId
-        );
-
-        // 构造更新数据
-        const updatedStyle: Partial<IStyle> = {
+        // 构造更新数据（仅包含可写字段，只读字段由后端生成）
+        const updatedStyle: StyleUpdate = {
           styleNo: values.styleNo,
           styleName: values.styleName,
           customerId: values.customerId,
-          customerName: selectedCustomer?.customerName,
           publicNote: values.publicNote || "",
         };
 

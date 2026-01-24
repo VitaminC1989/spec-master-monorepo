@@ -12,8 +12,8 @@ import React, { useState } from "react";
 import { EditableProTable } from "@ant-design/pro-components";
 import { Image, Button, Tag, Upload, message } from "antd";
 import { EditOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
-import { useList, useCreate, useUpdate, useDelete } from "@refinedev/core";
-import type { IBOMItem, IBOMItemWithSpecs, ISpecDetail } from "../../types/legacy";
+import { useList, useCreate, useUpdate, useDelete, HttpError } from "@refinedev/core";
+import type { BOMItemRead, BOMItemCreate, BOMItemUpdate, BOMItemWithSpecs, SpecDetailRead } from "../../types/api";
 import { SpecDetailModalForm } from "./SpecDetailModalForm";
 import { MaterialColorEditor, MaterialColorDisplay } from "./MaterialColorEditor";
 import { uploadToQiniu } from "../../utils/qiniuUpload";
@@ -102,10 +102,10 @@ const MaterialImageUploader: React.FC<MaterialImageUploaderProps> = ({ value, on
 
 export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
   // 当前正在编辑规格的配料记录
-  const [editingRecord, setEditingRecord] = useState<IBOMItemWithSpecs | null>(null);
+  const [editingRecord, setEditingRecord] = useState<BOMItemWithSpecs | null>(null);
 
   // 加载 L3 配料数据（按 variantId 筛选）
-  const { data: bomData, isLoading } = useList<IBOMItemWithSpecs>({
+  const { data: bomData, isLoading } = useList<BOMItemWithSpecs>({
     resource: "bom_items",
     filters: [{ field: "variantId", operator: "eq", value: variantId }],
     pagination: { pageSize: 100 }, // 加载所有配料
@@ -113,11 +113,11 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
 
   const dataSource = bomData?.data || [];
 
-  // 创建配料的 Hook
-  const { mutate: createBomItem } = useCreate();
+  // 创建配料的 Hook（使用读写分离泛型）
+  const { mutate: createBomItem } = useCreate<BOMItemRead, HttpError, BOMItemCreate>();
 
-  // 更新配料的 Hook
-  const { mutate: updateBomItem } = useUpdate();
+  // 更新配料的 Hook（使用读写分离泛型）
+  const { mutate: updateBomItem } = useUpdate<BOMItemRead, HttpError, BOMItemUpdate>();
 
   // 删除配料的 Hook
   const { mutate: deleteBomItem } = useDelete();
@@ -126,7 +126,7 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
    * 处理行内编辑保存
    * 智能判断：新记录调用 CREATE，已存在记录调用 UPDATE
    */
-  const handleSave = async (_key: React.Key, record: IBOMItem) => {
+  const handleSave = async (_key: React.Key, record: BOMItemRead) => {
     // 检查记录是否已存在于数据库中
     const existingRecord = dataSource.find((item) => item.id === record.id);
 
@@ -160,7 +160,7 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
   /**
    * 处理删除配料
    */
-  const handleDelete = (record: IBOMItem) => {
+  const handleDelete = (record: BOMItemRead) => {
     deleteBomItem(
       {
         resource: "bom_items",
@@ -177,7 +177,7 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
    * 渲染 L4 规格明细聚合显示
    * 关键实现：将 specDetails 数组映射为堆叠的文本块
    */
-  const renderSpecDetails = (specDetails: ISpecDetail[] | undefined, record: IBOMItemWithSpecs) => {
+  const renderSpecDetails = (specDetails: SpecDetailRead[] | undefined, record: BOMItemWithSpecs) => {
     if (!specDetails || specDetails.length === 0) {
       return (
         <div className="text-center">
@@ -242,7 +242,7 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
           </h3>
         </div>
 
-        <EditableProTable<IBOMItemWithSpecs>
+        <EditableProTable<BOMItemWithSpecs>
           rowKey="id"
           loading={isLoading}
           value={dataSource}
@@ -416,7 +416,7 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
           editable={{
             type: "multiple",
             onSave: async (key, record) => {
-              await handleSave(key as React.Key, record as IBOMItem);
+              await handleSave(key as React.Key, record as BOMItemRead);
             },
           }}
           pagination={false}

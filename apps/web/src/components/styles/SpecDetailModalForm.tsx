@@ -19,12 +19,12 @@ import {
   Empty,
 } from "antd";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
-import { useUpdate, useInvalidate } from "@refinedev/core";
-import type { IBOMItemWithSpecs, ISpecDetail } from "../../types/legacy";
+import { useUpdate, useInvalidate, HttpError } from "@refinedev/core";
+import type { BOMItemRead, BOMItemUpdate, BOMItemWithSpecs, SpecDetailRead } from "../../types/api";
 
 interface SpecDetailModalFormProps {
   open: boolean;
-  bomItem: IBOMItemWithSpecs | null;
+  bomItem: BOMItemWithSpecs | null;
   onClose: () => void;
 }
 
@@ -34,9 +34,9 @@ export const SpecDetailModalForm: React.FC<SpecDetailModalFormProps> = ({
   onClose,
 }) => {
   const [form] = Form.useForm();
-  
-  // 用于更新配料记录的 Hook
-  const { mutate: updateBomItem, isLoading } = useUpdate();
+
+  // 用于更新配料记录的 Hook（使用读写分离泛型）
+  const { mutate: updateBomItem, isLoading } = useUpdate<BOMItemRead, HttpError, BOMItemUpdate>();
   
   // 用于刷新数据的钩子
   const invalidate = useInvalidate();
@@ -48,7 +48,7 @@ export const SpecDetailModalForm: React.FC<SpecDetailModalFormProps> = ({
   useEffect(() => {
     if (open && bomItem) {
       // 确保每个规格都有唯一的 id
-      const specDetailsWithId = (bomItem.specDetails || []).map((spec, index) => ({
+      const specDetailsWithId = (bomItem.specDetails || []).map((spec: SpecDetailRead, index: number) => ({
         ...spec,
         id: spec.id || Date.now() + index * 1000 + Math.random(),
       }));
@@ -67,28 +67,27 @@ export const SpecDetailModalForm: React.FC<SpecDetailModalFormProps> = ({
     form
       .validateFields()
       .then((values) => {
-        const updatedSpecDetails: ISpecDetail[] = values.specDetails || [];
+        const updatedSpecDetails = values.specDetails || [];
 
-        // 为新增的规格生成唯一 ID
-        // 使用基础时间戳 + 毫秒数偏移，确保每条记录ID唯一
-        const baseTimestamp = Date.now();
-        const specDetailsWithId = updatedSpecDetails.map((spec, index) => ({
-          ...spec,
-          id: spec.id || baseTimestamp + index * 1000, // 每条记录间隔1000毫秒
-        }));
+        // 调用更新 API（仅传递可写字段，ID 由后端生成）
+        const updateData: BOMItemUpdate = {
+          specDetails: updatedSpecDetails.map((spec: { size?: string; specValue: string | number; specUnit: string; sortOrder?: number }) => ({
+            bomItemId: bomItem!.id,
+            size: spec.size,
+            specValue: String(spec.specValue),
+            specUnit: spec.specUnit,
+            sortOrder: spec.sortOrder,
+          })),
+        };
 
-        // 调用更新 API
         updateBomItem(
           {
             resource: "bom_items",
             id: bomItem!.id,
-            values: {
-              ...bomItem,
-              specDetails: specDetailsWithId,
-            },
+            values: updateData,
             successNotification: {
               message: "规格明细已更新",
-              description: `已保存 ${specDetailsWithId.length} 条规格记录`,
+              description: `已保存 ${updatedSpecDetails.length} 条规格记录`,
               type: "success",
             },
           },

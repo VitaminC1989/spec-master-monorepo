@@ -36,11 +36,12 @@ import {
 } from "@ant-design/icons";
 import { useList } from "@refinedev/core";
 import type {
-  IStyle,
-  IColorVariant,
-  IBOMItemWithSpecs,
-  ISizeOrderQty,
-} from "../../types/legacy";
+  StyleRead,
+  VariantRead,
+  BOMItemWithSpecs,
+  SpecDetailRead,
+} from "../../types/api";
+import type { ISizeOrderQty } from "../../types/legacy";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import dayjs, { Dayjs } from "dayjs";
@@ -48,7 +49,7 @@ import dayjs, { Dayjs } from "dayjs";
 interface OrderModalProps {
   open: boolean;
   onClose: () => void;
-  style: IStyle;
+  style: StyleRead;
 }
 
 /**
@@ -140,7 +141,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   const [orderDate, setOrderDate] = useState<Dayjs>(dayjs());
 
   // 加载颜色版本
-  const { data: variantsData } = useList<IColorVariant>({
+  const { data: variantsData } = useList<VariantRead>({
     resource: "variants",
     filters: [{ field: "styleId", operator: "eq", value: style.id }],
   });
@@ -148,7 +149,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   const variants = variantsData?.data || [];
 
   // 加载选中颜色版本的配料数据
-  const { data: bomData } = useList<IBOMItemWithSpecs>({
+  const { data: bomData } = useList<BOMItemWithSpecs>({
     resource: "bom_items",
     filters: selectedVariantId
       ? [{ field: "variantId", operator: "eq", value: selectedVariantId }]
@@ -164,7 +165,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   const availableSizes = useMemo(() => {
     const sizeSet = new Set<string>();
     bomItems.forEach((item) => {
-      item.specDetails?.forEach((spec) => {
+      item.specDetails?.forEach((spec: SpecDetailRead) => {
         if (spec.size && spec.size !== "通码") {
           sizeSet.add(spec.size);
         }
@@ -252,7 +253,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       } else {
         // 区分尺码的配料：每个尺码单独计算
         activeSizeOrders.forEach((so) => {
-          const specDetail = item.specDetails?.find((spec) => spec.size === so.size);
+          const specDetail = item.specDetails?.find((spec: SpecDetailRead) => spec.size === so.size);
           if (specDetail) {
             const actualUsage = item.usage * so.quantity;
 

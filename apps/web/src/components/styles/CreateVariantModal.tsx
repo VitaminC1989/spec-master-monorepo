@@ -9,8 +9,8 @@
 import React, { useState } from "react";
 import { Modal, Form, Input, message, Upload, Image, Select } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
-import { useCreate, useInvalidate, useList } from "@refinedev/core";
-import type { IColorVariant, ISize } from "../../types/legacy";
+import { useCreate, useInvalidate, useList, HttpError } from "@refinedev/core";
+import type { VariantRead, VariantCreate, SizeRead } from "../../types/api";
 import { uploadToQiniu } from "../../utils/qiniuUpload";
 
 interface CreateVariantModalProps {
@@ -28,14 +28,14 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
   const [imageUrl, setImageUrl] = useState<string>("");
   const [uploading, setUploading] = useState(false);
 
-  // 用于创建颜色版本的 Hook
-  const { mutate: createVariant, isLoading } = useCreate();
+  // 用于创建颜色版本的 Hook（使用读写分离泛型）
+  const { mutate: createVariant, isLoading } = useCreate<VariantRead, HttpError, VariantCreate>();
 
   // 用于刷新数据的钩子
   const invalidate = useInvalidate();
 
   // 获取尺码基础数据供多选使用
-  const { data: sizesData, isLoading: isSizesLoading } = useList<ISize>({
+  const { data: sizesData, isLoading: isSizesLoading } = useList<SizeRead>({
     resource: "sizes",
     pagination: { mode: "off" },
     sorters: [{ field: "sortOrder", order: "asc" }],
@@ -91,8 +91,8 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
     form
       .validateFields()
       .then((values) => {
-        // 构造颜色版本数据
-        const newVariant: Omit<IColorVariant, "id"> = {
+        // 构造颜色版本数据（仅包含可写字段，只读字段由后端生成）
+        const newVariant: VariantCreate = {
           styleId: styleId,
           colorName: values.colorName,
           // 将多选数组转换为 S/M/L 格式的字符串
@@ -102,8 +102,6 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
           // 使用上传的图片，如果没有则为空（不使用默认图）
           sampleImageUrl: imageUrl || "",
           sortOrder: 0,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
         };
 
         // 调用创建 API

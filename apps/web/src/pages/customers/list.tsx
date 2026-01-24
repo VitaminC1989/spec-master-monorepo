@@ -8,17 +8,16 @@ import { useTable, useModalForm } from "@refinedev/antd";
 import { ProTable } from "@ant-design/pro-components";
 import { Button, Modal, Form, Input, message, Space } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from "@ant-design/icons";
-import { useDelete, useCreate, useInvalidate } from "@refinedev/core";
+import { useDelete, useCreate, useInvalidate, HttpError } from "@refinedev/core";
 import { useNavigate } from "react-router-dom";
-import type { ICustomer } from "../../types/legacy";
-import dayjs from "dayjs";
+import type { CustomerRead, CustomerCreate } from "../../types/api";
 
 export const CustomerList: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const navigate = useNavigate();
   
   // 表格数据
-  const { tableProps } = useTable<ICustomer>({
+  const { tableProps } = useTable<CustomerRead>({
     resource: "customers",
     pagination: { pageSize: 10 },
   });
@@ -28,7 +27,7 @@ export const CustomerList: React.FC = () => {
     modalProps: editModalProps,
     formProps: editFormProps,
     show: showEdit,
-  } = useModalForm<ICustomer>({
+  } = useModalForm<CustomerRead>({
     resource: "customers",
     action: "edit",
     redirect: false,
@@ -37,7 +36,7 @@ export const CustomerList: React.FC = () => {
   // 删除
   const { mutate: deleteCustomer } = useDelete();
 
-  const handleDelete = (record: ICustomer) => {
+  const handleDelete = (record: CustomerRead) => {
     Modal.confirm({
       title: "确认删除",
       content: `确定要删除客户"${record.customerName}"吗？`,
@@ -71,7 +70,7 @@ export const CustomerList: React.FC = () => {
         </Button>
       </div>
 
-      <ProTable<ICustomer>
+      <ProTable<CustomerRead>
         {...tableProps}
         rowKey="id"
         search={false}
@@ -201,14 +200,19 @@ const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
   onClose,
 }) => {
   const [form] = Form.useForm();
-  const { mutate: createCustomer, isLoading } = useCreate<ICustomer>();
+  const { mutate: createCustomer, isLoading } = useCreate<CustomerRead, HttpError, CustomerCreate>();
   const invalidate = useInvalidate();
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
-      const newCustomer = {
-        ...values,
-        createDate: dayjs().format("YYYY-MM-DD"),
+      // 仅传递可写字段，只读字段由后端生成
+      const newCustomer: CustomerCreate = {
+        customerName: values.customerName,
+        contactPerson: values.contactPerson,
+        contactPhone: values.contactPhone,
+        contactEmail: values.contactEmail,
+        address: values.address,
+        note: values.note,
       };
 
       createCustomer(

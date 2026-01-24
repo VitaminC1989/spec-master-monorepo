@@ -8,8 +8,8 @@
 
 import React from "react";
 import { Modal, Form, Input, Select, message } from "antd";
-import { useCreate, useInvalidate, useList } from "@refinedev/core";
-import type { IStyle, ICustomer } from "../../types/legacy";
+import { useCreate, useInvalidate, useList, HttpError } from "@refinedev/core";
+import type { StyleRead, StyleCreate, CustomerRead } from "../../types/api";
 import dayjs from "dayjs";
 
 interface CreateStyleModalProps {
@@ -23,14 +23,14 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
 }) => {
   const [form] = Form.useForm();
 
-  // 用于创建款号的 Hook
-  const { mutate: createStyle, isLoading } = useCreate();
+  // 用于创建款号的 Hook（使用读写分离泛型）
+  const { mutate: createStyle, isLoading } = useCreate<StyleRead, HttpError, StyleCreate>();
 
   // 用于刷新数据的钩子
   const invalidate = useInvalidate();
 
   // 加载客户列表
-  const { data: customersData } = useList<ICustomer>({
+  const { data: customersData } = useList<CustomerRead>({
     resource: "customers",
     pagination: {
       pageSize: 1000, // 加载所有客户
@@ -44,19 +44,11 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
     form
       .validateFields()
       .then((values) => {
-        // 查找选中的客户名称
-        const selectedCustomer = customersData?.data?.find(
-          (c) => c.id === values.customerId
-        );
-
-        // 构造款号数据（创建日期自动生成）
-        const newStyle: Omit<IStyle, "id"> = {
+        // 构造款号数据（仅包含可写字段，只读字段由后端生成）
+        const newStyle: StyleCreate = {
           styleNo: values.styleNo,
           styleName: values.styleName,
           customerId: values.customerId,
-          customerName: selectedCustomer?.customerName,
-          createdAt: dayjs().toISOString(), // 当前日期
-          updatedAt: dayjs().toISOString(),
           publicNote: values.publicNote || "",
         };
 

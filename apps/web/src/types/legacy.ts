@@ -4,10 +4,31 @@
  * 这个文件将生成的类型重新导出为旧的接口名称，
  * 允许组件逐步迁移到新的类型系统。
  *
+ * 推荐使用：从 ./api.ts 导入读写分离的类型
  * 迁移完成后，这个文件将被删除。
  */
 
 import type { components } from "@spec/types";
+
+// ============================================================================
+// 重新导出 api.ts 中的读写分离类型（推荐使用）
+// ============================================================================
+export type {
+  // 款号
+  StyleRead, StyleCreate, StyleUpdate,
+  // 颜色版本
+  VariantRead, VariantCreate, VariantUpdate, VariantClone, VariantCloneResponse,
+  // 配料明细
+  BOMItemRead, BOMItemCreate, BOMItemUpdate, BOMItemWithSpecs,
+  // 规格明细
+  SpecDetailRead, SpecDetailCreate, SpecDetailUpdate,
+  // 客户
+  CustomerRead, CustomerCreate, CustomerUpdate,
+  // 尺码
+  SizeRead, SizeCreate, SizeUpdate,
+  // 单位
+  UnitRead, UnitCreate, UnitUpdate,
+} from "./api";
 
 // ============================================================================
 // 款号 (Styles)
