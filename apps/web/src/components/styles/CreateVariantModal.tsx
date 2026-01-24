@@ -29,7 +29,11 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
   const [uploading, setUploading] = useState(false);
 
   // 用于创建颜色版本的 Hook（使用读写分离泛型）
-  const { mutate: createVariant, isLoading } = useCreate<VariantRead, HttpError, VariantCreate>();
+  const { mutate: createVariant, isLoading } = useCreate<
+    VariantRead,
+    HttpError,
+    VariantCreate
+  >();
 
   // 用于刷新数据的钩子
   const invalidate = useInvalidate();
@@ -51,6 +55,8 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
    * 处理图片上传（使用 Sealos 对象存储）
    */
   const handleImageChange = async (info: any) => {
+    console.log("[DEBUG] handleImageChange called:", info);
+
     // 只处理新选择的文件，避免重复上传
     if (info.file.status === "removed") {
       setImageUrl("");
@@ -58,12 +64,31 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
       return;
     }
 
-    const file = info.file.originFileObj || info.file;
+    // 防止重复上传
+    if (uploading) {
+      console.log("[DEBUG] Already uploading, skip");
+      return;
+    }
 
-    // 确保是真实的文件对象，且没有正在上传
-    if (file && file instanceof File) {
+    const file = info.file.originFileObj || info.file;
+    console.log(
+      "[DEBUG] File object:",
+      file,
+      "instanceof File:",
+      file instanceof File,
+    );
+
+    // 确保是真实的文件对象
+    if (file && (file instanceof File || (file.name && file.size))) {
       try {
         setUploading(true);
+        console.log(
+          "[DEBUG] Starting upload, file:",
+          file.name,
+          file.size,
+          file.type,
+        );
+
         // 上传到对象存储
         const url = await uploadToObjectStorage({
           file,
@@ -73,14 +98,20 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
           },
         });
 
+        console.log("[DEBUG] Upload success, url:", url);
         setImageUrl(url);
         setUploading(false);
         message.success("样衣图片上传成功");
       } catch (error) {
         console.error("样衣图片上传失败:", error);
-        message.error("样衣图片上传失败，请重试");
+        // 显示更详细的错误信息
+        const errorMessage =
+          error instanceof Error ? error.message : "未知错误";
+        message.error(`样衣图片上传失败：${errorMessage}`);
         setUploading(false);
       }
+    } else {
+      console.warn("[DEBUG] Invalid file object:", file);
     }
   };
 
@@ -136,7 +167,7 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
                 duration: 3,
               });
             },
-          }
+          },
         );
       })
       .catch((errorInfo) => {
