@@ -123,6 +123,35 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
   const { mutate: deleteBomItem } = useDelete();
 
   /**
+   * 统一错误处理函数
+   * 根据错误类型提供友好的用户提示
+   */
+  const handleError = (error: HttpError, operation: string) => {
+    console.error(`${operation}失败:`, error);
+
+    const statusCode = error.statusCode;
+    const errorMessage = error.message || "未知错误";
+
+    if (statusCode === 400) {
+      message.error(`${operation}失败：数据验证不通过 - ${errorMessage}`);
+    } else if (statusCode === 401) {
+      message.error(`${operation}失败：未登录或登录已过期，请重新登录后再试`);
+    } else if (statusCode === 403) {
+      message.error(`${operation}失败：权限不足，您没有执行此操作的权限`);
+    } else if (statusCode === 404) {
+      message.error(`${operation}失败：数据不存在，该配料可能已被删除`);
+    } else if (statusCode === 409) {
+      message.error(`${operation}失败：数据冲突 - ${errorMessage}`);
+    } else if (statusCode >= 500) {
+      message.error(`${operation}失败：服务器错误，请稍后重试或联系管理员`);
+    } else if (!statusCode) {
+      message.error(`${operation}失败：网络连接失败，请检查网络连接后重试`);
+    } else {
+      message.error(`${operation}失败：${errorMessage || "请稍后重试"}`);
+    }
+  };
+
+  /**
    * 处理行内编辑保存
    * 智能判断：新记录调用 CREATE，已存在记录调用 UPDATE
    */
@@ -131,29 +160,72 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
     const existingRecord = dataSource.find((item) => item.id === record.id);
 
     if (existingRecord) {
-      // 已存在 -> 更新
-      updateBomItem({
-        resource: "bom_items",
-        id: record.id,
-        values: record,
-        successNotification: {
-          message: "保存成功",
-          type: "success",
+      // ========== 更新操作 ==========
+      // 显式构造 UpdateBomItemDto，仅包含可写字段
+      const updateData: BOMItemUpdate = {
+        materialName: record.materialName,
+        materialImageUrl: record.materialImageUrl || undefined,
+        materialColorText: record.materialColorText || undefined,
+        materialColorImageUrl: record.materialColorImageUrl || undefined,
+        usage: record.usage,
+        unit: record.unit,
+        supplier: record.supplier || undefined,
+        sortOrder: record.sortOrder,
+      };
+
+      updateBomItem(
+        {
+          resource: "bom_items",
+          id: record.id,
+          values: updateData,
         },
-      });
+        {
+          onSuccess: () => {
+            message.success("配料更新成功");
+          },
+          onError: (error) => {
+            handleError(error, "更新配料");
+          },
+        }
+      );
     } else {
-      // 不存在 -> 创建新记录
-      createBomItem({
-        resource: "bom_items",
-        values: {
-          ...record,
-          variantId: variantId, // 确保关联正确的颜色版本
+      // ========== 创建操作 ==========
+      // 显式构造 CreateBomItemDto，仅包含可写字段
+      const createData: BOMItemCreate = {
+        variantId: variantId,
+        materialName: record.materialName,
+        materialImageUrl: record.materialImageUrl || undefined,
+        materialColorText: record.materialColorText || undefined,
+        materialColorImageUrl: record.materialColorImageUrl || undefined,
+        usage: record.usage,
+        unit: record.unit,
+        supplier: record.supplier || undefined,
+        sortOrder: record.sortOrder ?? 0,
+        // 嵌套创建规格明细（如果存在）
+        specDetails: record.specDetails && record.specDetails.length > 0
+          ? record.specDetails.map((spec: SpecDetailRead) => ({
+              size: spec.size || undefined,
+              specValue: String(spec.specValue),
+              specUnit: spec.specUnit,
+              sortOrder: spec.sortOrder ?? 0,
+            }))
+          : undefined,
+      };
+
+      createBomItem(
+        {
+          resource: "bom_items",
+          values: createData,
         },
-        successNotification: {
-          message: "添加成功",
-          type: "success",
-        },
-      });
+        {
+          onSuccess: () => {
+            message.success("配料添加成功");
+          },
+          onError: (error) => {
+            handleError(error, "添加配料");
+          },
+        }
+      );
     }
   };
 
@@ -165,9 +237,13 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
       {
         resource: "bom_items",
         id: record.id,
-        successNotification: {
-          message: "删除成功",
-          type: "success",
+      },
+      {
+        onSuccess: () => {
+          message.success("配料删除成功");
+        },
+        onError: (error) => {
+          handleError(error, "删除配料");
         },
       }
     );
