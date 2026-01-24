@@ -6,14 +6,24 @@
 import React, { useState } from "react";
 import { useTable, useModalForm } from "@refinedev/antd";
 import { ProTable } from "@ant-design/pro-components";
-import { Button, Modal, Form, Input, InputNumber, Switch, message, Space, Tag } from "antd";
+import {
+  Button,
+  Modal,
+  Form,
+  Input,
+  InputNumber,
+  Switch,
+  message,
+  Space,
+  Tag,
+} from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { useDelete } from "@refinedev/core";
+import { useDelete, useCreate } from "@refinedev/core";
 import type { ISize } from "../../types/legacy";
 
 export const SizeList: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  
+
   // 表格数据
   const { tableProps } = useTable<ISize>({
     resource: "sizes",
@@ -167,7 +177,10 @@ export const SizeList: React.FC = () => {
             <Input placeholder="如：小号、中号" />
           </Form.Item>
           <Form.Item label="排序序号" name="sortOrder">
-            <InputNumber placeholder="数字越小越靠前" style={{ width: "100%" }} />
+            <InputNumber
+              placeholder="数字越小越靠前"
+              style={{ width: "100%" }}
+            />
           </Form.Item>
           <Form.Item label="是否启用" name="isActive" valuePropName="checked">
             <Switch />
@@ -187,16 +200,9 @@ interface CreateSizeModalProps {
   onClose: () => void;
 }
 
-const CreateSizeModal: React.FC<CreateSizeModalProps> = ({
-  open,
-  onClose,
-}) => {
+const CreateSizeModal: React.FC<CreateSizeModalProps> = ({ open, onClose }) => {
   const [form] = Form.useForm();
-  const { mutate: createSize, isLoading } = useModalForm<ISize>({
-    resource: "sizes",
-    action: "create",
-    redirect: false,
-  }).formProps.onFinish as any;
+  const { mutate: createSize, isLoading } = useCreate<ISize>();
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
@@ -204,7 +210,7 @@ const CreateSizeModal: React.FC<CreateSizeModalProps> = ({
         ...values,
         isActive: values.isActive !== false, // 默认启用
       };
-      
+
       createSize(
         { resource: "sizes", values: newSize },
         {
@@ -213,7 +219,7 @@ const CreateSizeModal: React.FC<CreateSizeModalProps> = ({
             form.resetFields();
             onClose();
           },
-        }
+        },
       );
     });
   };
@@ -257,7 +263,3 @@ const CreateSizeModal: React.FC<CreateSizeModalProps> = ({
     </Modal>
   );
 };
-
-
-
-

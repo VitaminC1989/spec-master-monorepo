@@ -8,12 +8,12 @@ import { useTable, useModalForm } from "@refinedev/antd";
 import { ProTable } from "@ant-design/pro-components";
 import { Button, Modal, Form, Input, Switch, message, Space, Tag } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { useDelete } from "@refinedev/core";
+import { useDelete, useCreate } from "@refinedev/core";
 import type { IUnit } from "../../types/legacy";
 
 export const UnitList: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  
+
   // 表格数据
   const { tableProps } = useTable<IUnit>({
     resource: "units",
@@ -93,9 +93,7 @@ export const UnitList: React.FC = () => {
             title: "单位类型",
             dataIndex: "unitType",
             width: 120,
-            render: (text) => (
-              text ? <Tag color="cyan">{text}</Tag> : "-"
-            ),
+            render: (text) => (text ? <Tag color="cyan">{text}</Tag> : "-"),
           },
           {
             title: "状态",
@@ -188,16 +186,9 @@ interface CreateUnitModalProps {
   onClose: () => void;
 }
 
-const CreateUnitModal: React.FC<CreateUnitModalProps> = ({
-  open,
-  onClose,
-}) => {
+const CreateUnitModal: React.FC<CreateUnitModalProps> = ({ open, onClose }) => {
   const [form] = Form.useForm();
-  const { mutate: createUnit, isLoading } = useModalForm<IUnit>({
-    resource: "units",
-    action: "create",
-    redirect: false,
-  }).formProps.onFinish as any;
+  const { mutate: createUnit, isLoading } = useCreate<IUnit>();
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
@@ -216,7 +207,7 @@ const CreateUnitModal: React.FC<CreateUnitModalProps> = ({
             form.resetFields();
             onClose();
           },
-        }
+        },
       );
     });
   };
@@ -260,7 +251,3 @@ const CreateUnitModal: React.FC<CreateUnitModalProps> = ({
     </Modal>
   );
 };
-
-
-
-
