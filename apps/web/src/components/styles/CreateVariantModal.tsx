@@ -2,7 +2,7 @@
  * 新建颜色版本弹窗组件
  * 功能：
  * 1. 收集颜色版本基础信息（颜色名称、尺码范围）
- * 2. 支持上传样衣图片到七牛云 OSS
+ * 2. 支持上传样衣图片到 Sealos 对象存储
  * 3. 创建后自动关联到当前款号
  */
 
@@ -11,7 +11,7 @@ import { Modal, Form, Input, message, Upload, Image, Select } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useCreate, useInvalidate, useList, HttpError } from "@refinedev/core";
 import type { VariantRead, VariantCreate, SizeRead } from "../../types/api";
-import { uploadToQiniu } from "../../utils/qiniuUpload";
+import { uploadToObjectStorage } from "../../utils/objectStorageUpload";
 
 interface CreateVariantModalProps {
   open: boolean;
@@ -48,7 +48,7 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
     })) || [];
 
   /**
-   * 处理图片上传（使用七牛云）
+   * 处理图片上传（使用 Sealos 对象存储）
    */
   const handleImageChange = async (info: any) => {
     // 只处理新选择的文件，避免重复上传
@@ -64,8 +64,8 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
     if (file && file instanceof File) {
       try {
         setUploading(true);
-        // 上传到七牛云
-        const url = await uploadToQiniu({
+        // 上传到对象存储
+        const url = await uploadToObjectStorage({
           file,
           prefix: "samples", // 样衣图片前缀
           onProgress: (percent) => {

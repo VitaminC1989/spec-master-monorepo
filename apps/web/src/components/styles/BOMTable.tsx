@@ -16,7 +16,7 @@ import { useList, useCreate, useUpdate, useDelete, HttpError } from "@refinedev/
 import type { BOMItemRead, BOMItemCreate, BOMItemUpdate, BOMItemWithSpecs, SpecDetailRead } from "../../types/api";
 import { SpecDetailModalForm } from "./SpecDetailModalForm";
 import { MaterialColorEditor, MaterialColorDisplay } from "./MaterialColorEditor";
-import { uploadToQiniu } from "../../utils/qiniuUpload";
+import { uploadToObjectStorage } from "../../utils/objectStorageUpload";
 
 interface BOMTableProps {
   variantId: number;
@@ -36,7 +36,7 @@ const MaterialImageUploader: React.FC<MaterialImageUploaderProps> = ({ value, on
   const handleUpload = async (file: File) => {
     try {
       setUploading(true);
-      const url = await uploadToQiniu({
+      const url = await uploadToObjectStorage({
         file,
         prefix: "materials", // 辅料图片前缀
         onProgress: (percent) => {
