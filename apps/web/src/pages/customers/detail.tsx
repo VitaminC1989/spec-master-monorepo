@@ -9,7 +9,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useOne, useList } from "@refinedev/core";
 import { Button, Spin, Alert, Card, Descriptions, Table, Space, Tag } from "antd";
 import { ArrowLeftOutlined, EyeOutlined } from "@ant-design/icons";
-import type { ICustomer, IStyle } from "../../types/models";
+import type { ICustomer, IStyle } from "../../types/legacy";
 
 export const CustomerDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +24,7 @@ export const CustomerDetailPage: React.FC = () => {
   // 加载该客户的所有款号
   const { data: stylesData, isLoading: stylesLoading } = useList<IStyle>({
     resource: "styles",
-    filters: [{ field: "customer_id", operator: "eq", value: Number(id) }],
+    filters: [{ field: "customerId", operator: "eq", value: Number(id) }],
     pagination: { pageSize: 100 },
   });
 
@@ -58,27 +58,27 @@ export const CustomerDetailPage: React.FC = () => {
   const styleColumns = [
     {
       title: "款号",
-      dataIndex: "style_no",
-      key: "style_no",
+      dataIndex: "styleNo",
+      key: "styleNo",
       width: 120,
       render: (text: string) => <Tag color="blue">{text}</Tag>,
     },
     {
       title: "款式名称",
-      dataIndex: "style_name",
-      key: "style_name",
+      dataIndex: "styleName",
+      key: "styleName",
       width: 200,
     },
     {
       title: "创建日期",
-      dataIndex: "create_date",
-      key: "create_date",
+      dataIndex: "createdAt",
+      key: "createdAt",
       width: 120,
     },
     {
       title: "备注",
-      dataIndex: "public_note",
-      key: "public_note",
+      dataIndex: "publicNote",
+      key: "publicNote",
       ellipsis: true,
     },
     {
@@ -113,19 +113,19 @@ export const CustomerDetailPage: React.FC = () => {
       <Card title="客户信息" className="shadow-sm">
         <Descriptions column={2} bordered size="small">
           <Descriptions.Item label="客户名称" span={2}>
-            <span className="font-semibold text-lg">{customer.customer_name}</span>
+            <span className="font-semibold text-lg">{customer.customerName}</span>
           </Descriptions.Item>
           <Descriptions.Item label="联系人">
-            {customer.contact_person || "-"}
+            {customer.contactPerson || "-"}
           </Descriptions.Item>
           <Descriptions.Item label="联系电话">
-            {customer.contact_phone || "-"}
+            {customer.contactPhone || "-"}
           </Descriptions.Item>
           <Descriptions.Item label="联系邮箱">
-            {customer.contact_email || "-"}
+            {customer.contactEmail || "-"}
           </Descriptions.Item>
           <Descriptions.Item label="创建日期">
-            {customer.create_date || "-"}
+            {customer.createdAt || "-"}
           </Descriptions.Item>
           <Descriptions.Item label="地址" span={2}>
             {customer.address || "-"}

@@ -5,7 +5,6 @@
   "description": "服装配方管理系统前端 Demo",
   "scripts": {
     "dev": "vite",
-    "dev:token": "node scripts/local-qiniu-server.js",
     "build": "vite build",
     "build:check": "tsc && vite build",
     "preview": "vite preview",
@@ -17,11 +16,11 @@
     "@refinedev/antd": "^5.37.4",
     "@refinedev/core": "^4.47.1",
     "@refinedev/react-router-v6": "^4.5.5",
+    "@spec/types": "workspace:*",
     "antd": "^5.12.1",
     "dayjs": "^1.11.10",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
-    "qiniu-js": "^3.4.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.1",
@@ -42,7 +41,6 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "postcss": "^8.4.32",
-    "qiniu": "^7.14.0",
     "tailwindcss": "^3.3.6",
     "typescript": "^5.2.2",
     "vite": "^5.0.8"

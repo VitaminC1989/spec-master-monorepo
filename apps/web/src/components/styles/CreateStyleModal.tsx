@@ -8,8 +8,8 @@
 
 import React from "react";
 import { Modal, Form, Input, Select, message } from "antd";
-import { useCreate, useInvalidate, useList } from "@refinedev/core";
-import type { IStyle, ICustomer } from "../../types/models";
+import { useCreate, useInvalidate, useList, HttpError } from "@refinedev/core";
+import type { StyleRead, StyleCreate, CustomerRead } from "../../types/api";
 import dayjs from "dayjs";
 
 interface CreateStyleModalProps {
@@ -23,14 +23,14 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
 }) => {
   const [form] = Form.useForm();
 
-  // 用于创建款号的 Hook
-  const { mutate: createStyle, isLoading } = useCreate();
+  // 用于创建款号的 Hook（使用读写分离泛型）
+  const { mutate: createStyle, isLoading } = useCreate<StyleRead, HttpError, StyleCreate>();
 
   // 用于刷新数据的钩子
   const invalidate = useInvalidate();
 
   // 加载客户列表
-  const { data: customersData } = useList<ICustomer>({
+  const { data: customersData } = useList<CustomerRead>({
     resource: "customers",
     pagination: {
       pageSize: 1000, // 加载所有客户
@@ -44,19 +44,12 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
     form
       .validateFields()
       .then((values) => {
-        // 查找选中的客户名称
-        const selectedCustomer = customersData?.data?.find(
-          (c) => c.id === values.customer_id
-        );
-
-        // 构造款号数据（创建日期自动生成）
-        const newStyle: Omit<IStyle, "id"> = {
-          style_no: values.style_no,
-          style_name: values.style_name,
-          customer_id: values.customer_id,
-          customer_name: selectedCustomer?.customer_name,
-          create_date: dayjs().format("YYYY-MM-DD"), // 当前日期
-          public_note: values.public_note || "",
+        // 构造款号数据（仅包含可写字段，只读字段由后端生成）
+        const newStyle: StyleCreate = {
+          styleNo: values.styleNo,
+          styleName: values.styleName,
+          customerId: values.customerId,
+          publicNote: values.publicNote || "",
         };
 
         // 调用创建 API
@@ -66,7 +59,7 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
             values: newStyle,
             successNotification: {
               message: "创建成功",
-              description: `款号"${values.style_no}"已创建`,
+              description: `款号"${values.styleNo}"已创建`,
               type: "success",
             },
             errorNotification: {
@@ -140,7 +133,7 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
           {/* 关联客户字段（必填）*/}
           <Form.Item
             label="关联客户"
-            name="customer_id"
+            name="customerId"
             rules={[{ required: true, message: "请选择关联客户" }]}
             tooltip="选择该款号所属的客户"
           >
@@ -150,7 +143,7 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
               showSearch
               optionFilterProp="label"
               options={customersData?.data?.map((customer) => ({
-                label: customer.customer_name,
+                label: customer.customerName,
                 value: customer.id,
               }))}
             />
@@ -159,7 +152,7 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
           {/* 款号字段（必填）*/}
           <Form.Item
             label="款号"
-            name="style_no"
+            name="styleNo"
             rules={[
               { required: true, message: "请输入款号" },
               { max: 20, message: "款号不能超过 20 个字符" },
@@ -180,7 +173,7 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
           {/* 款式名称字段（可选）*/}
           <Form.Item
             label="款式名称"
-            name="style_name"
+            name="styleName"
             rules={[{ max: 50, message: "款式名称不能超过 50 个字符" }]}
             tooltip="对款号的描述性名称"
           >
@@ -194,7 +187,7 @@ export const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
           {/* 公共备注字段（可选）*/}
           <Form.Item
             label="公共备注"
-            name="public_note"
+            name="publicNote"
             rules={[{ max: 200, message: "备注不能超过 200 个字符" }]}
             tooltip="所有颜色版本共用的备注信息"
           >

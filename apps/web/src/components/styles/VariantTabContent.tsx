@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import type { IColorVariant } from "../../types/models";
+import type { IColorVariant } from "../../types/legacy";
 import { VariantHeader } from "./VariantHeader";
 import { BOMTable } from "./BOMTable";
 

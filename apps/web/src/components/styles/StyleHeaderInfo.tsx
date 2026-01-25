@@ -7,12 +7,12 @@
 import React, { useState, useEffect } from "react";
 import { Card, Descriptions, Button, Modal, Form, Input, Select, message, Space } from "antd";
 import { EditOutlined, ShoppingCartOutlined } from "@ant-design/icons";
-import { useUpdate, useInvalidate, useList } from "@refinedev/core";
-import type { IStyle, ICustomer } from "../../types/models";
+import { useUpdate, useInvalidate, useList, HttpError } from "@refinedev/core";
+import type { StyleRead, StyleUpdate, CustomerRead } from "../../types/api";
 import { OrderModal } from "./OrderModal";
 
 interface StyleHeaderInfoProps {
-  style?: IStyle;
+  style?: StyleRead;
 }
 
 export const StyleHeaderInfo: React.FC<StyleHeaderInfoProps> = ({ style }) => {
@@ -20,14 +20,14 @@ export const StyleHeaderInfo: React.FC<StyleHeaderInfoProps> = ({ style }) => {
   const [orderModalOpen, setOrderModalOpen] = useState(false);
   const [form] = Form.useForm();
 
-  // 用于更新款号的 Hook
-  const { mutate: updateStyle, isLoading } = useUpdate();
+  // 用于更新款号的 Hook（使用读写分离泛型）
+  const { mutate: updateStyle, isLoading } = useUpdate<StyleRead, HttpError, StyleUpdate>();
 
   // 用于刷新数据的钩子
   const invalidate = useInvalidate();
 
   // 加载客户列表
-  const { data: customersData } = useList<ICustomer>({
+  const { data: customersData } = useList<CustomerRead>({
     resource: "customers",
     pagination: {
       pageSize: 1000,
@@ -38,10 +38,10 @@ export const StyleHeaderInfo: React.FC<StyleHeaderInfoProps> = ({ style }) => {
   useEffect(() => {
     if (editModalOpen && style) {
       form.setFieldsValue({
-        style_no: style.style_no,
-        style_name: style.style_name,
-        customer_id: style.customer_id,
-        public_note: style.public_note,
+        styleNo: style.styleNo,
+        styleName: style.styleName,
+        customerId: style.customerId,
+        publicNote: style.publicNote,
       });
     }
   }, [editModalOpen, style, form]);
@@ -55,18 +55,12 @@ export const StyleHeaderInfo: React.FC<StyleHeaderInfoProps> = ({ style }) => {
     form
       .validateFields()
       .then((values) => {
-        // 查找选中的客户名称
-        const selectedCustomer = customersData?.data?.find(
-          (c) => c.id === values.customer_id
-        );
-
-        // 构造更新数据
-        const updatedStyle: Partial<IStyle> = {
-          style_no: values.style_no,
-          style_name: values.style_name,
-          customer_id: values.customer_id,
-          customer_name: selectedCustomer?.customer_name,
-          public_note: values.public_note || "",
+        // 构造更新数据（仅包含可写字段，只读字段由后端生成）
+        const updatedStyle: StyleUpdate = {
+          styleNo: values.styleNo,
+          styleName: values.styleName,
+          customerId: values.customerId,
+          publicNote: values.publicNote || "",
         };
 
         // 调用更新 API
@@ -77,7 +71,7 @@ export const StyleHeaderInfo: React.FC<StyleHeaderInfoProps> = ({ style }) => {
             values: updatedStyle,
             successNotification: {
               message: "更新成功",
-              description: `款号"${values.style_no}"已更新`,
+              description: `款号"${values.styleNo}"已更新`,
               type: "success",
             },
             errorNotification: {
@@ -138,29 +132,29 @@ export const StyleHeaderInfo: React.FC<StyleHeaderInfoProps> = ({ style }) => {
         <Descriptions column={3} bordered>
           <Descriptions.Item label="款号" span={1}>
             <span className="font-bold text-blue-600 text-lg">
-              {style.style_no}
+              {style.styleNo}
             </span>
           </Descriptions.Item>
 
           <Descriptions.Item label="款式名称" span={1}>
             <span className="font-medium text-gray-800">
-              {style.style_name || "-"}
+              {style.styleName || "-"}
             </span>
           </Descriptions.Item>
 
           <Descriptions.Item label="创建日期" span={1}>
-            <span className="text-gray-600">{style.create_date}</span>
+            <span className="text-gray-600">{style.createdAt}</span>
           </Descriptions.Item>
 
           <Descriptions.Item label="关联客户" span={1}>
             <span className="font-medium text-green-600">
-              {style.customer_name || "-"}
+              {style.customerName || "-"}
             </span>
           </Descriptions.Item>
 
           <Descriptions.Item label="公共备注" span={2}>
             <span className="text-gray-700">
-              {style.public_note || "无备注"}
+              {style.publicNote || "无备注"}
             </span>
           </Descriptions.Item>
         </Descriptions>
@@ -188,7 +182,7 @@ export const StyleHeaderInfo: React.FC<StyleHeaderInfoProps> = ({ style }) => {
             {/* 关联客户字段 */}
             <Form.Item
               label="关联客户"
-              name="customer_id"
+              name="customerId"
               rules={[{ required: true, message: "请选择关联客户" }]}
               tooltip="选择该款号所属的客户"
             >
@@ -198,7 +192,7 @@ export const StyleHeaderInfo: React.FC<StyleHeaderInfoProps> = ({ style }) => {
                 showSearch
                 optionFilterProp="label"
                 options={customersData?.data?.map((customer) => ({
-                  label: customer.customer_name,
+                  label: customer.customerName,
                   value: customer.id,
                 }))}
               />
@@ -207,7 +201,7 @@ export const StyleHeaderInfo: React.FC<StyleHeaderInfoProps> = ({ style }) => {
             {/* 款号字段 */}
             <Form.Item
               label="款号"
-              name="style_no"
+              name="styleNo"
               rules={[
                 { required: true, message: "请输入款号" },
                 { max: 20, message: "款号不能超过 20 个字符" },
@@ -224,7 +218,7 @@ export const StyleHeaderInfo: React.FC<StyleHeaderInfoProps> = ({ style }) => {
             {/* 款式名称字段 */}
             <Form.Item
               label="款式名称"
-              name="style_name"
+              name="styleName"
               rules={[{ max: 50, message: "款式名称不能超过 50 个字符" }]}
               tooltip="对款号的描述性名称"
             >
@@ -238,7 +232,7 @@ export const StyleHeaderInfo: React.FC<StyleHeaderInfoProps> = ({ style }) => {
             {/* 公共备注字段 */}
             <Form.Item
               label="公共备注"
-              name="public_note"
+              name="publicNote"
               rules={[{ max: 200, message: "备注不能超过 200 个字符" }]}
               tooltip="所有颜色版本共用的备注信息"
             >
@@ -252,7 +246,7 @@ export const StyleHeaderInfo: React.FC<StyleHeaderInfoProps> = ({ style }) => {
 
             {/* 创建日期（只读） */}
             <div className="text-sm text-gray-500 mt-2">
-              <strong>创建日期：</strong> {style.create_date}（不可修改）
+              <strong>创建日期：</strong> {style.createdAt}（不可修改）
             </div>
           </Form>
         </div>

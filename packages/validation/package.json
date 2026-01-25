@@ -1,0 +1,26 @@
+{
+  "name": "@spec/validation",
+  "version": "1.0.0",
+  "description": "Shared validation rules and filter whitelists",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "class-validator": "^0.14.1",
+    "class-transformer": "^0.5.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

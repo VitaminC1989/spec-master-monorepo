@@ -12,11 +12,11 @@ import React, { useState } from "react";
 import { EditableProTable } from "@ant-design/pro-components";
 import { Image, Button, Tag, Upload, message } from "antd";
 import { EditOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
-import { useList, useCreate, useUpdate, useDelete } from "@refinedev/core";
-import type { IBOMItem, ISpecDetail } from "../../types/models";
+import { useList, useCreate, useUpdate, useDelete, HttpError } from "@refinedev/core";
+import type { BOMItemRead, BOMItemCreate, BOMItemUpdate, BOMItemWithSpecs, SpecDetailRead } from "../../types/api";
 import { SpecDetailModalForm } from "./SpecDetailModalForm";
 import { MaterialColorEditor, MaterialColorDisplay } from "./MaterialColorEditor";
-import { uploadToQiniu } from "../../utils/qiniuUpload";
+import { uploadToObjectStorage } from "../../utils/objectStorageUpload";
 
 interface BOMTableProps {
   variantId: number;
@@ -36,7 +36,7 @@ const MaterialImageUploader: React.FC<MaterialImageUploaderProps> = ({ value, on
   const handleUpload = async (file: File) => {
     try {
       setUploading(true);
-      const url = await uploadToQiniu({
+      const url = await uploadToObjectStorage({
         file,
         prefix: "materials", // 辅料图片前缀
         onProgress: (percent) => {
@@ -102,72 +102,148 @@ const MaterialImageUploader: React.FC<MaterialImageUploaderProps> = ({ value, on
 
 export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
   // 当前正在编辑规格的配料记录
-  const [editingRecord, setEditingRecord] = useState<IBOMItem | null>(null);
+  const [editingRecord, setEditingRecord] = useState<BOMItemWithSpecs | null>(null);
 
-  // 加载 L3 配料数据（按 variant_id 筛选）
-  const { data: bomData, isLoading } = useList<IBOMItem>({
+  // 加载 L3 配料数据（按 variantId 筛选）
+  const { data: bomData, isLoading } = useList<BOMItemWithSpecs>({
     resource: "bom_items",
-    filters: [{ field: "variant_id", operator: "eq", value: variantId }],
+    filters: [{ field: "variantId", operator: "eq", value: variantId }],
     pagination: { pageSize: 100 }, // 加载所有配料
   });
 
   const dataSource = bomData?.data || [];
 
-  // 创建配料的 Hook
-  const { mutate: createBomItem } = useCreate();
+  // 创建配料的 Hook（使用读写分离泛型）
+  const { mutate: createBomItem } = useCreate<BOMItemRead, HttpError, BOMItemCreate>();
 
-  // 更新配料的 Hook
-  const { mutate: updateBomItem } = useUpdate();
+  // 更新配料的 Hook（使用读写分离泛型）
+  const { mutate: updateBomItem } = useUpdate<BOMItemRead, HttpError, BOMItemUpdate>();
 
   // 删除配料的 Hook
   const { mutate: deleteBomItem } = useDelete();
 
   /**
+   * 统一错误处理函数
+   * 根据错误类型提供友好的用户提示
+   */
+  const handleError = (error: HttpError, operation: string) => {
+    console.error(`${operation}失败:`, error);
+
+    const statusCode = error.statusCode;
+    const errorMessage = error.message || "未知错误";
+
+    if (statusCode === 400) {
+      message.error(`${operation}失败：数据验证不通过 - ${errorMessage}`);
+    } else if (statusCode === 401) {
+      message.error(`${operation}失败：未登录或登录已过期，请重新登录后再试`);
+    } else if (statusCode === 403) {
+      message.error(`${operation}失败：权限不足，您没有执行此操作的权限`);
+    } else if (statusCode === 404) {
+      message.error(`${operation}失败：数据不存在，该配料可能已被删除`);
+    } else if (statusCode === 409) {
+      message.error(`${operation}失败：数据冲突 - ${errorMessage}`);
+    } else if (statusCode >= 500) {
+      message.error(`${operation}失败：服务器错误，请稍后重试或联系管理员`);
+    } else if (!statusCode) {
+      message.error(`${operation}失败：网络连接失败，请检查网络连接后重试`);
+    } else {
+      message.error(`${operation}失败：${errorMessage || "请稍后重试"}`);
+    }
+  };
+
+  /**
    * 处理行内编辑保存
    * 智能判断：新记录调用 CREATE，已存在记录调用 UPDATE
    */
-  const handleSave = async (_key: React.Key, record: IBOMItem) => {
+  const handleSave = async (_key: React.Key, record: BOMItemRead) => {
     // 检查记录是否已存在于数据库中
     const existingRecord = dataSource.find((item) => item.id === record.id);
 
     if (existingRecord) {
-      // 已存在 -> 更新
-      updateBomItem({
-        resource: "bom_items",
-        id: record.id,
-        values: record,
-        successNotification: {
-          message: "保存成功",
-          type: "success",
+      // ========== 更新操作 ==========
+      // 显式构造 UpdateBomItemDto，仅包含可写字段
+      const updateData: BOMItemUpdate = {
+        materialName: record.materialName,
+        materialImageUrl: record.materialImageUrl || undefined,
+        materialColorText: record.materialColorText || undefined,
+        materialColorImageUrl: record.materialColorImageUrl || undefined,
+        usage: record.usage,
+        unit: record.unit,
+        supplier: record.supplier || undefined,
+        sortOrder: record.sortOrder,
+      };
+
+      updateBomItem(
+        {
+          resource: "bom_items",
+          id: record.id,
+          values: updateData,
         },
-      });
+        {
+          onSuccess: () => {
+            message.success("配料更新成功");
+          },
+          onError: (error) => {
+            handleError(error, "更新配料");
+          },
+        }
+      );
     } else {
-      // 不存在 -> 创建新记录
-      createBomItem({
-        resource: "bom_items",
-        values: {
-          ...record,
-          variant_id: variantId, // 确保关联正确的颜色版本
+      // ========== 创建操作 ==========
+      // 显式构造 CreateBomItemDto，仅包含可写字段
+      const createData: BOMItemCreate = {
+        variantId: variantId,
+        materialName: record.materialName,
+        materialImageUrl: record.materialImageUrl || undefined,
+        materialColorText: record.materialColorText || undefined,
+        materialColorImageUrl: record.materialColorImageUrl || undefined,
+        usage: record.usage,
+        unit: record.unit,
+        supplier: record.supplier || undefined,
+        sortOrder: record.sortOrder ?? 0,
+        // 嵌套创建规格明细（如果存在）
+        specDetails: record.specDetails && record.specDetails.length > 0
+          ? record.specDetails.map((spec: SpecDetailRead) => ({
+              size: spec.size || undefined,
+              specValue: String(spec.specValue),
+              specUnit: spec.specUnit,
+              sortOrder: spec.sortOrder ?? 0,
+            }))
+          : undefined,
+      };
+
+      createBomItem(
+        {
+          resource: "bom_items",
+          values: createData,
         },
-        successNotification: {
-          message: "添加成功",
-          type: "success",
-        },
-      });
+        {
+          onSuccess: () => {
+            message.success("配料添加成功");
+          },
+          onError: (error) => {
+            handleError(error, "添加配料");
+          },
+        }
+      );
     }
   };
 
   /**
    * 处理删除配料
    */
-  const handleDelete = (record: IBOMItem) => {
+  const handleDelete = (record: BOMItemRead) => {
     deleteBomItem(
       {
         resource: "bom_items",
         id: record.id,
-        successNotification: {
-          message: "删除成功",
-          type: "success",
+      },
+      {
+        onSuccess: () => {
+          message.success("配料删除成功");
+        },
+        onError: (error) => {
+          handleError(error, "删除配料");
         },
       }
     );
@@ -177,7 +253,7 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
    * 渲染 L4 规格明细聚合显示
    * 关键实现：将 specDetails 数组映射为堆叠的文本块
    */
-  const renderSpecDetails = (specDetails: ISpecDetail[], record: IBOMItem) => {
+  const renderSpecDetails = (specDetails: SpecDetailRead[] | undefined, record: BOMItemWithSpecs) => {
     if (!specDetails || specDetails.length === 0) {
       return (
         <div className="text-center">
@@ -210,9 +286,9 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
               )}
               {/* 规格值和单位 */}
               <span className="font-medium text-gray-800">
-                {spec.spec_value}
+                {spec.specValue}
               </span>
-              <span className="text-gray-500 text-sm">{spec.spec_unit}</span>
+              <span className="text-gray-500 text-sm">{spec.specUnit}</span>
             </div>
           ))}
         </div>
@@ -242,14 +318,14 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
           </h3>
         </div>
 
-        <EditableProTable<IBOMItem>
+        <EditableProTable<BOMItemWithSpecs>
           rowKey="id"
           loading={isLoading}
           value={dataSource}
           columns={[
             {
               title: "辅料名称",
-              dataIndex: "material_name",
+              dataIndex: "materialName",
               width: 180,
               formItemProps: {
                 rules: [{ required: true, message: "请输入辅料名称" }],
@@ -257,7 +333,7 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
             },
             {
               title: "辅料图片",
-              dataIndex: "material_image_url",
+              dataIndex: "materialImageUrl",
               width: 120,
               render: (url) => {
                 if (!url) {
@@ -279,14 +355,14 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
               renderFormItem: (_, { record, recordKey }, form) => {
                 return (
                   <MaterialImageUploader
-                    value={record?.material_image_url}
+                    value={record?.materialImageUrl}
                     onChange={(url) => {
                       if (record && recordKey !== undefined) {
-                        record.material_image_url = url;
+                        record.materialImageUrl = url;
                         form?.setFieldsValue({
                           [recordKey as string]: {
                             ...record,
-                            material_image_url: url,
+                            materialImageUrl: url,
                           },
                         });
                       }
@@ -297,32 +373,32 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
             },
             {
               title: "辅料颜色",
-              dataIndex: "material_color_text", // 使用真实字段名
+              dataIndex: "materialColorText", // 使用真实字段名
               width: 250,
               render: (_, record) => (
                 <MaterialColorDisplay
-                  text={record.material_color_text}
-                  imageUrl={record.material_color_image_url}
+                  text={record.materialColorText}
+                  imageUrl={record.materialColorImageUrl}
                 />
               ),
               renderFormItem: (_, { record, recordKey }, form) => {
                 return (
                   <MaterialColorEditor
                     value={{
-                      text: record?.material_color_text,
-                      imageUrl: record?.material_color_image_url,
+                      text: record?.materialColorText,
+                      imageUrl: record?.materialColorImageUrl,
                     }}
                     onChange={(value) => {
                       // 使用表单实例更新值（确保被追踪）
                       if (record && recordKey !== undefined) {
-                        record.material_color_text = value.text;
-                        record.material_color_image_url = value.imageUrl;
+                        record.materialColorText = value.text;
+                        record.materialColorImageUrl = value.imageUrl;
                         // 触发表单值变化
                         form?.setFieldsValue({
                           [recordKey as string]: {
                             ...record,
-                            material_color_text: value.text,
-                            material_color_image_url: value.imageUrl,
+                            materialColorText: value.text,
+                            materialColorImageUrl: value.imageUrl,
                           },
                         });
                       }
@@ -334,7 +410,7 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
             // 隐藏字段：辅料颜色图片URL（用于保存数据）
             {
               title: "色卡图片",
-              dataIndex: "material_color_image_url",
+              dataIndex: "materialColorImageUrl",
               hideInTable: true, // 表格中隐藏
               editable: false,   // 不可编辑（通过上面的颜色列编辑）
             },
@@ -402,18 +478,21 @@ export const BOMTable: React.FC<BOMTableProps> = ({ variantId }) => {
             creatorButtonText: "添加配料",
             record: () => ({
               id: Date.now(), // 临时ID
-              variant_id: variantId,
-              material_name: "",
-              material_image_url: "", // 让用户自己上传
+              variantId: variantId,
+              materialName: "",
+              materialImageUrl: "", // 让用户自己上传
               usage: 1,
               unit: "条",
+              sortOrder: 0,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
               specDetails: [],
             }),
           }}
           editable={{
             type: "multiple",
             onSave: async (key, record) => {
-              await handleSave(key as React.Key, record as IBOMItem);
+              await handleSave(key as React.Key, record as BOMItemRead);
             },
           }}
           pagination={false}

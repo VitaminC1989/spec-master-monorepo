@@ -6,7 +6,7 @@
 import React, { useState } from "react";
 import { Input, Upload, Image, Space, Button, Popover, message } from "antd";
 import { PictureOutlined, DeleteOutlined } from "@ant-design/icons";
-import { uploadToQiniu } from "../../utils/qiniuUpload";
+import { uploadToObjectStorage } from "../../utils/objectStorageUpload";
 
 interface MaterialColorEditorProps {
   value?: {
@@ -33,12 +33,12 @@ export const MaterialColorEditor: React.FC<MaterialColorEditorProps> = ({
   };
 
   /**
-   * 处理图片上传（使用七牛云）
+   * 处理图片上传（使用 Sealos 对象存储）
    */
   const handleImageUpload = async (file: File) => {
     try {
-      // 上传到七牛云
-      const newImageUrl = await uploadToQiniu({
+      // 上传到对象存储
+      const newImageUrl = await uploadToObjectStorage({
         file,
         prefix: "colors", // 色卡图片前缀
         onProgress: (percent) => {

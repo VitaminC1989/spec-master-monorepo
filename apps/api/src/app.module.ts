@@ -10,12 +10,13 @@ import { BomItemsModule } from './modules/bom-items/bom-items.module';
 import { SpecDetailsModule } from './modules/spec-details/spec-details.module';
 import { SizesModule } from './modules/sizes/sizes.module';
 import { UnitsModule } from './modules/units/units.module';
+import { StorageModule } from './modules/storage/storage.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: ['.env.local', '.env'], // 优先读取 .env.local
     }),
     PrismaModule,
     CustomersModule,
@@ -25,6 +26,7 @@ import { UnitsModule } from './modules/units/units.module';
     SpecDetailsModule,
     SizesModule,
     UnitsModule,
+    StorageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -8,17 +8,16 @@ import { useTable, useModalForm } from "@refinedev/antd";
 import { ProTable } from "@ant-design/pro-components";
 import { Button, Modal, Form, Input, message, Space } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from "@ant-design/icons";
-import { useDelete, useCreate, useInvalidate } from "@refinedev/core";
+import { useDelete, useCreate, useInvalidate, HttpError } from "@refinedev/core";
 import { useNavigate } from "react-router-dom";
-import type { ICustomer } from "../../types/models";
-import dayjs from "dayjs";
+import type { CustomerRead, CustomerCreate } from "../../types/api";
 
 export const CustomerList: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const navigate = useNavigate();
   
   // 表格数据
-  const { tableProps } = useTable<ICustomer>({
+  const { tableProps } = useTable<CustomerRead>({
     resource: "customers",
     pagination: { pageSize: 10 },
   });
@@ -28,7 +27,7 @@ export const CustomerList: React.FC = () => {
     modalProps: editModalProps,
     formProps: editFormProps,
     show: showEdit,
-  } = useModalForm<ICustomer>({
+  } = useModalForm<CustomerRead>({
     resource: "customers",
     action: "edit",
     redirect: false,
@@ -37,10 +36,10 @@ export const CustomerList: React.FC = () => {
   // 删除
   const { mutate: deleteCustomer } = useDelete();
 
-  const handleDelete = (record: ICustomer) => {
+  const handleDelete = (record: CustomerRead) => {
     Modal.confirm({
       title: "确认删除",
-      content: `确定要删除客户"${record.customer_name}"吗？`,
+      content: `确定要删除客户"${record.customerName}"吗？`,
       okText: "确认删除",
       okType: "danger",
       cancelText: "取消",
@@ -71,14 +70,14 @@ export const CustomerList: React.FC = () => {
         </Button>
       </div>
 
-      <ProTable<ICustomer>
+      <ProTable<CustomerRead>
         {...tableProps}
         rowKey="id"
         search={false}
         columns={[
           {
             title: "客户名称",
-            dataIndex: "customer_name",
+            dataIndex: "customerName",
             width: 250,
             render: (text, record) => (
               <a
@@ -91,17 +90,17 @@ export const CustomerList: React.FC = () => {
           },
           {
             title: "联系人",
-            dataIndex: "contact_person",
+            dataIndex: "contactPerson",
             width: 120,
           },
           {
             title: "联系电话",
-            dataIndex: "contact_phone",
+            dataIndex: "contactPhone",
             width: 150,
           },
           {
             title: "联系邮箱",
-            dataIndex: "contact_email",
+            dataIndex: "contactEmail",
             width: 200,
           },
           {
@@ -111,7 +110,7 @@ export const CustomerList: React.FC = () => {
           },
           {
             title: "创建日期",
-            dataIndex: "create_date",
+            dataIndex: "createDate",
             width: 120,
           },
           {
@@ -164,18 +163,18 @@ export const CustomerList: React.FC = () => {
         <Form {...editFormProps} layout="vertical">
           <Form.Item
             label="客户名称"
-            name="customer_name"
+            name="customerName"
             rules={[{ required: true, message: "请输入客户名称" }]}
           >
             <Input placeholder="请输入客户名称" />
           </Form.Item>
-          <Form.Item label="联系人" name="contact_person">
+          <Form.Item label="联系人" name="contactPerson">
             <Input placeholder="请输入联系人" />
           </Form.Item>
-          <Form.Item label="联系电话" name="contact_phone">
+          <Form.Item label="联系电话" name="contactPhone">
             <Input placeholder="请输入联系电话" />
           </Form.Item>
-          <Form.Item label="联系邮箱" name="contact_email">
+          <Form.Item label="联系邮箱" name="contactEmail">
             <Input placeholder="请输入联系邮箱" />
           </Form.Item>
           <Form.Item label="地址" name="address">
@@ -201,14 +200,19 @@ const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
   onClose,
 }) => {
   const [form] = Form.useForm();
-  const { mutate: createCustomer, isLoading } = useCreate<ICustomer>();
+  const { mutate: createCustomer, isLoading } = useCreate<CustomerRead, HttpError, CustomerCreate>();
   const invalidate = useInvalidate();
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
-      const newCustomer = {
-        ...values,
-        create_date: dayjs().format("YYYY-MM-DD"),
+      // 仅传递可写字段，只读字段由后端生成
+      const newCustomer: CustomerCreate = {
+        customerName: values.customerName,
+        contactPerson: values.contactPerson,
+        contactPhone: values.contactPhone,
+        contactEmail: values.contactEmail,
+        address: values.address,
+        note: values.note,
       };
 
       createCustomer(
@@ -242,18 +246,18 @@ const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
       <Form form={form} layout="vertical">
         <Form.Item
           label="客户名称"
-          name="customer_name"
+          name="customerName"
           rules={[{ required: true, message: "请输入客户名称" }]}
         >
           <Input placeholder="请输入客户名称" />
         </Form.Item>
-        <Form.Item label="联系人" name="contact_person">
+        <Form.Item label="联系人" name="contactPerson">
           <Input placeholder="请输入联系人" />
         </Form.Item>
-        <Form.Item label="联系电话" name="contact_phone">
+        <Form.Item label="联系电话" name="contactPhone">
           <Input placeholder="请输入联系电话" />
         </Form.Item>
-        <Form.Item label="联系邮箱" name="contact_email">
+        <Form.Item label="联系邮箱" name="contactEmail">
           <Input placeholder="请输入联系邮箱" />
         </Form.Item>
         <Form.Item label="地址" name="address">

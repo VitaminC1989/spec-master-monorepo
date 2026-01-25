@@ -2,16 +2,16 @@
  * 新建颜色版本弹窗组件
  * 功能：
  * 1. 收集颜色版本基础信息（颜色名称、尺码范围）
- * 2. 支持上传样衣图片到七牛云 OSS
+ * 2. 支持上传样衣图片到 Sealos 对象存储
  * 3. 创建后自动关联到当前款号
  */
 
 import React, { useState } from "react";
 import { Modal, Form, Input, message, Upload, Image, Select } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
-import { useCreate, useInvalidate, useList } from "@refinedev/core";
-import type { IColorVariant, ISize } from "../../types/models";
-import { uploadToQiniu } from "../../utils/qiniuUpload";
+import { useCreate, useInvalidate, useList, HttpError } from "@refinedev/core";
+import type { VariantRead, VariantCreate, SizeRead } from "../../types/api";
+import { uploadToObjectStorage } from "../../utils/objectStorageUpload";
 
 interface CreateVariantModalProps {
   open: boolean;
@@ -28,29 +28,35 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
   const [imageUrl, setImageUrl] = useState<string>("");
   const [uploading, setUploading] = useState(false);
 
-  // 用于创建颜色版本的 Hook
-  const { mutate: createVariant, isLoading } = useCreate();
+  // 用于创建颜色版本的 Hook（使用读写分离泛型）
+  const { mutate: createVariant, isLoading } = useCreate<
+    VariantRead,
+    HttpError,
+    VariantCreate
+  >();
 
   // 用于刷新数据的钩子
   const invalidate = useInvalidate();
 
   // 获取尺码基础数据供多选使用
-  const { data: sizesData, isLoading: isSizesLoading } = useList<ISize>({
+  const { data: sizesData, isLoading: isSizesLoading } = useList<SizeRead>({
     resource: "sizes",
     pagination: { mode: "off" },
-    sorters: [{ field: "sort_order", order: "asc" }],
+    sorters: [{ field: "sortOrder", order: "asc" }],
   });
 
   const sizeOptions =
     sizesData?.data?.map((size) => ({
-      label: size.size_code,
-      value: size.size_code,
+      label: size.sizeCode,
+      value: size.sizeCode,
     })) || [];
 
   /**
-   * 处理图片上传（使用七牛云）
+   * 处理图片上传（使用 Sealos 对象存储）
    */
   const handleImageChange = async (info: any) => {
+    console.log("[DEBUG] handleImageChange called:", info);
+
     // 只处理新选择的文件，避免重复上传
     if (info.file.status === "removed") {
       setImageUrl("");
@@ -58,14 +64,33 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
       return;
     }
 
-    const file = info.file.originFileObj || info.file;
+    // 防止重复上传
+    if (uploading) {
+      console.log("[DEBUG] Already uploading, skip");
+      return;
+    }
 
-    // 确保是真实的文件对象，且没有正在上传
-    if (file && file instanceof File) {
+    const file = info.file.originFileObj || info.file;
+    console.log(
+      "[DEBUG] File object:",
+      file,
+      "instanceof File:",
+      file instanceof File,
+    );
+
+    // 确保是真实的文件对象
+    if (file && (file instanceof File || (file.name && file.size))) {
       try {
         setUploading(true);
-        // 上传到七牛云
-        const url = await uploadToQiniu({
+        console.log(
+          "[DEBUG] Starting upload, file:",
+          file.name,
+          file.size,
+          file.type,
+        );
+
+        // 上传到对象存储
+        const url = await uploadToObjectStorage({
           file,
           prefix: "samples", // 样衣图片前缀
           onProgress: (percent) => {
@@ -73,14 +98,20 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
           },
         });
 
+        console.log("[DEBUG] Upload success, url:", url);
         setImageUrl(url);
         setUploading(false);
         message.success("样衣图片上传成功");
       } catch (error) {
         console.error("样衣图片上传失败:", error);
-        message.error("样衣图片上传失败，请重试");
+        // 显示更详细的错误信息
+        const errorMessage =
+          error instanceof Error ? error.message : "未知错误";
+        message.error(`样衣图片上传失败：${errorMessage}`);
         setUploading(false);
       }
+    } else {
+      console.warn("[DEBUG] Invalid file object:", file);
     }
   };
 
@@ -91,16 +122,17 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
     form
       .validateFields()
       .then((values) => {
-        // 构造颜色版本数据
-        const newVariant: Omit<IColorVariant, "id"> = {
-          style_id: styleId,
-          color_name: values.color_name,
+        // 构造颜色版本数据（仅包含可写字段，只读字段由后端生成）
+        const newVariant: VariantCreate = {
+          styleId: styleId,
+          colorName: values.colorName,
           // 将多选数组转换为 S/M/L 格式的字符串
-          size_range: Array.isArray(values.size_range)
-            ? values.size_range.join("/")
-            : values.size_range || "",
+          sizeRange: Array.isArray(values.sizeRange)
+            ? values.sizeRange.join("/")
+            : values.sizeRange || "",
           // 使用上传的图片，如果没有则为空（不使用默认图）
-          sample_image_url: imageUrl || "",
+          sampleImageUrl: imageUrl || "",
+          sortOrder: 0,
         };
 
         // 调用创建 API
@@ -110,7 +142,7 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
             values: newVariant,
             successNotification: {
               message: "创建成功",
-              description: `颜色版本"${values.color_name}"已创建`,
+              description: `颜色版本"${values.colorName}"已创建`,
               type: "success",
             },
             errorNotification: {
@@ -135,7 +167,7 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
                 duration: 3,
               });
             },
-          }
+          },
         );
       })
       .catch((errorInfo) => {
@@ -184,7 +216,7 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
           {/* 颜色名称字段（必填）*/}
           <Form.Item
             label="颜色名称"
-            name="color_name"
+            name="colorName"
             rules={[
               { required: true, message: "请输入颜色名称" },
               { max: 20, message: "颜色名称不能超过 20 个字符" },
@@ -201,7 +233,7 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
           {/* 尺码范围字段（多选）*/}
           <Form.Item
             label="尺码范围"
-            name="size_range"
+            name="sizeRange"
             tooltip="选择该颜色版本包含的尺码范围"
           >
             <Select

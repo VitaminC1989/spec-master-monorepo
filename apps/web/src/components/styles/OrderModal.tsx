@@ -36,11 +36,12 @@ import {
 } from "@ant-design/icons";
 import { useList } from "@refinedev/core";
 import type {
-  IStyle,
-  IColorVariant,
-  IBOMItem,
-  ISizeOrderQty,
-} from "../../types/models";
+  StyleRead,
+  VariantRead,
+  BOMItemWithSpecs,
+  SpecDetailRead,
+} from "../../types/api";
+import type { ISizeOrderQty } from "../../types/legacy";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import dayjs, { Dayjs } from "dayjs";
@@ -48,7 +49,7 @@ import dayjs, { Dayjs } from "dayjs";
 interface OrderModalProps {
   open: boolean;
   onClose: () => void;
-  style: IStyle;
+  style: StyleRead;
 }
 
 /**
@@ -140,18 +141,18 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   const [orderDate, setOrderDate] = useState<Dayjs>(dayjs());
 
   // 加载颜色版本
-  const { data: variantsData } = useList<IColorVariant>({
+  const { data: variantsData } = useList<VariantRead>({
     resource: "variants",
-    filters: [{ field: "style_id", operator: "eq", value: style.id }],
+    filters: [{ field: "styleId", operator: "eq", value: style.id }],
   });
 
   const variants = variantsData?.data || [];
 
   // 加载选中颜色版本的配料数据
-  const { data: bomData } = useList<IBOMItem>({
+  const { data: bomData } = useList<BOMItemWithSpecs>({
     resource: "bom_items",
     filters: selectedVariantId
-      ? [{ field: "variant_id", operator: "eq", value: selectedVariantId }]
+      ? [{ field: "variantId", operator: "eq", value: selectedVariantId }]
       : [],
     queryOptions: {
       enabled: !!selectedVariantId,
@@ -164,7 +165,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   const availableSizes = useMemo(() => {
     const sizeSet = new Set<string>();
     bomItems.forEach((item) => {
-      item.specDetails?.forEach((spec) => {
+      item.specDetails?.forEach((spec: SpecDetailRead) => {
         if (spec.size && spec.size !== "通码") {
           sizeSet.add(spec.size);
         }
@@ -235,15 +236,15 @@ export const OrderModal: React.FC<OrderModalProps> = ({
 
         results.push({
           type: "universal",
-          materialName: item.material_name,
-          materialImageUrl: item.material_image_url,
-          materialColor: item.material_color_text || "-",
-          materialColorImageUrl: item.material_color_image_url,
+          materialName: item.materialName,
+          materialImageUrl: item.materialImageUrl || "",
+          materialColor: item.materialColorText || "-",
+          materialColorImageUrl: item.materialColorImageUrl,
           unit: item.unit,
           usage: item.usage,
           supplier: item.supplier,
-          specValue: universalSpec?.spec_value ?? "-",
-          specUnit: universalSpec?.spec_unit ?? item.unit,
+          specValue: universalSpec?.specValue ?? "-",
+          specUnit: universalSpec?.specUnit ?? item.unit,
           totalOrderQty,
           actualUsage,
           deliveryQty: Math.ceil(actualUsage), // 默认向上取整
@@ -252,22 +253,22 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       } else {
         // 区分尺码的配料：每个尺码单独计算
         activeSizeOrders.forEach((so) => {
-          const specDetail = item.specDetails?.find((spec) => spec.size === so.size);
+          const specDetail = item.specDetails?.find((spec: SpecDetailRead) => spec.size === so.size);
           if (specDetail) {
             const actualUsage = item.usage * so.quantity;
 
             results.push({
               type: "sized",
-              materialName: item.material_name,
-              materialImageUrl: item.material_image_url,
-              materialColor: item.material_color_text || "-",
-              materialColorImageUrl: item.material_color_image_url,
+              materialName: item.materialName,
+              materialImageUrl: item.materialImageUrl || "",
+              materialColor: item.materialColorText || "-",
+              materialColorImageUrl: item.materialColorImageUrl,
               unit: item.unit,
               usage: item.usage,
               supplier: item.supplier,
               size: so.size,
-              specValue: specDetail.spec_value,
-              specUnit: specDetail.spec_unit,
+              specValue: specDetail.specValue,
+              specUnit: specDetail.specUnit,
               orderQty: so.quantity,
               actualUsage,
               deliveryQty: Math.ceil(actualUsage),
@@ -397,9 +398,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
         // 第一行显示日期、款号、样衣图片、颜色、总件数
         if (i === 0) {
           dataRow.getCell(1).value = orderDate.format("YYYY-MM-DD");
-          dataRow.getCell(2).value = style.style_no;
+          dataRow.getCell(2).value = style.styleNo;
           dataRow.getCell(3).value = ""; // 样衣图片列
-          dataRow.getCell(4).value = selectedVariant?.color_name || "";
+          dataRow.getCell(4).value = selectedVariant?.colorName || "";
           dataRow.getCell(5).value = totalOrderQty;
         }
 
@@ -487,12 +488,12 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       }
 
       // 添加样衣图片（合并后的单元格居中显示）
-      if (selectedVariant?.sample_image_url) {
-        const sampleImageBase64 = await fetchImageAsBase64(selectedVariant.sample_image_url);
+      if (selectedVariant?.sampleImageUrl) {
+        const sampleImageBase64 = await fetchImageAsBase64(selectedVariant.sampleImageUrl);
         if (sampleImageBase64) {
           const sampleImageId = workbook.addImage({
             base64: sampleImageBase64,
-            extension: getImageExtension(selectedVariant.sample_image_url),
+            extension: getImageExtension(selectedVariant.sampleImageUrl),
           });
 
           // 计算合并单元格的总高度（像素）
@@ -529,7 +530,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       });
       saveAs(
         blob,
-        `配料下单表_${style.style_no}_${selectedVariant?.color_name || ""}_${orderDate.format("YYYY-MM-DD")}.xlsx`
+        `配料下单表_${style.styleNo}_${selectedVariant?.colorName || ""}_${orderDate.format("YYYY-MM-DD")}.xlsx`
       );
 
       message.success("Excel 导出成功！");
@@ -668,7 +669,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       title={
         <div className="flex items-center gap-2">
           <ShoppingCartOutlined className="text-blue-500" />
-          <span>配料下单 - {style.style_no}</span>
+          <span>配料下单 - {style.styleNo}</span>
         </div>
       }
       open={open}
@@ -730,7 +731,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                   value={selectedVariantId}
                   onChange={handleVariantChange}
                   options={variants.map((v) => ({
-                    label: v.color_name,
+                    label: v.colorName,
                     value: v.id,
                   }))}
                 />

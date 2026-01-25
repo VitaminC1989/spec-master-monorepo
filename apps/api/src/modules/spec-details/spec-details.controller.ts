@@ -17,7 +17,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { SpecDetailsService } from './spec-details.service';
-import { CreateSpecDetailDto, UpdateSpecDetailDto } from './dto';
+import { CreateSpecDetailDto, UpdateSpecDetailDto, SpecDetailResponseDto, SpecDetailListResponseDto } from './dto';
 import {
   ParseFiltersPipe,
   ParsePaginationPipe,
@@ -40,6 +40,7 @@ export class SpecDetailsController {
     required: false,
     description: 'Refine pagination JSON',
   })
+  @ApiResponse({ status: 200, description: '返回规格明细列表和总数', type: SpecDetailListResponseDto })
   async findAll(
     @Query('filters', ParseFiltersPipe) filters: any[],
     @Query('pagination', ParsePaginationPipe)
@@ -51,12 +52,15 @@ export class SpecDetailsController {
   @Get(':id')
   @ApiOperation({ summary: '获取规格明细详情' })
   @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: '返回规格明细详情', type: SpecDetailResponseDto })
+  @ApiResponse({ status: 404, description: '规格明细不存在' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.specDetailsService.findOne(id);
   }
 
   @Post()
   @ApiOperation({ summary: '创建规格明细' })
+  @ApiResponse({ status: 201, description: '创建成功', type: SpecDetailResponseDto })
   async create(@Body() createSpecDetailDto: CreateSpecDetailDto) {
     return this.specDetailsService.create(createSpecDetailDto);
   }
@@ -64,6 +68,7 @@ export class SpecDetailsController {
   @Put(':id')
   @ApiOperation({ summary: '更新规格明细' })
   @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: '更新成功', type: SpecDetailResponseDto })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateSpecDetailDto: UpdateSpecDetailDto,
@@ -74,6 +79,7 @@ export class SpecDetailsController {
   @Delete(':id')
   @ApiOperation({ summary: '删除规格明细' })
   @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: '删除成功' })
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.specDetailsService.remove(id);
   }
