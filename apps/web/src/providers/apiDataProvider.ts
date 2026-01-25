@@ -5,6 +5,7 @@
 
 import { DataProvider } from "@refinedev/core";
 import type { components } from "@spec/types";
+import { getAccessToken } from "./authProvider";
 
 // 定义类型别名
 type CloneVariantResponseDto = components["schemas"]["CloneVariantResponseDto"];
@@ -35,13 +36,24 @@ function getApiPath(resource: string): string {
 /**
  * 通用 HTTP 请求封装
  */
-async function request<T>(url: string, options?: RequestInit): Promise<T> {
+async function request<T>(
+  url: string,
+  options?: RequestInit
+): Promise<T> {
+  const token = getAccessToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...((options?.headers as Record<string, string>) || {}),
+  };
+
+  // 添加 Authorization 头
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const response = await fetch(url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
+    headers,
   });
 
   if (!response.ok) {
@@ -57,21 +69,18 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
  */
 export const apiDataProvider: DataProvider = {
   /**
-   * 获取资源列表 - 使用 GET 带查询参数
+   * 获取资源列表 - 使用 POST /search 端点
    */
   getList: async ({ resource, filters, pagination, sorters }) => {
     console.log(`[API] getList: ${resource}`, { filters, pagination });
 
     const apiPath = getApiPath(resource);
 
-    // 构建查询参数
-    const params = new URLSearchParams();
-
-    // 添加 filters 参数（JSON 编码）
-    if (filters && filters.length > 0) {
-      const filterArray = filters.map((f) => {
+    // 构建 POST 请求体
+    const searchRequest = {
+      filters: filters?.map(f => {
         // 处理 LogicalFilter 和 ConditionalFilter
-        if ("field" in f) {
+        if ('field' in f) {
           return {
             field: f.field,
             operator: f.operator,
@@ -80,39 +89,22 @@ export const apiDataProvider: DataProvider = {
         }
         // 处理其他类型的 filter
         return f;
-      });
-      params.append("filters", JSON.stringify(filterArray));
-    }
+      }),
+      pagination: pagination ? {
+        current: pagination.current,
+        pageSize: pagination.pageSize,
+      } : undefined,
+      sorters: sorters?.map(s => ({
+        field: s.field,
+        order: s.order,
+      })),
+    };
 
-    // 添加 pagination 参数（JSON 编码）
-    if (pagination) {
-      params.append(
-        "pagination",
-        JSON.stringify({
-          current: pagination.current,
-          pageSize: pagination.pageSize,
-        }),
-      );
-    }
-
-    // 添加 sorters 参数（JSON 编码）
-    if (sorters && sorters.length > 0) {
-      params.append(
-        "sorters",
-        JSON.stringify(
-          sorters.map((s) => ({
-            field: s.field,
-            order: s.order,
-          })),
-        ),
-      );
-    }
-
-    // 使用 GET 带查询参数
-    const queryString = params.toString();
-    const url = `${API_BASE_URL}/${apiPath}${queryString ? `?${queryString}` : ""}`;
+    // 使用 POST /search
+    const url = `${API_BASE_URL}/${apiPath}/search`;
     const result = await request<{ data: any[]; total: number }>(url, {
-      method: "GET",
+      method: "POST",
+      body: JSON.stringify(searchRequest),
     });
 
     return {
@@ -196,7 +188,9 @@ export const apiDataProvider: DataProvider = {
     console.log(`[API] getMany: ${resource}`, ids);
 
     // 使用多个 getOne 请求实现
-    const promises = ids.map((id) => apiDataProvider.getOne({ resource, id }));
+    const promises = ids.map((id) =>
+      apiDataProvider.getOne({ resource, id })
+    );
     const results = await Promise.all(promises);
 
     return {
@@ -211,7 +205,7 @@ export const apiDataProvider: DataProvider = {
     console.log(`[API] updateMany: ${resource}`, ids);
 
     const promises = ids.map((id) =>
-      apiDataProvider.update({ resource, id, variables }),
+      apiDataProvider.update({ resource, id, variables })
     );
     const results = await Promise.all(promises);
 
@@ -227,7 +221,7 @@ export const apiDataProvider: DataProvider = {
     console.log(`[API] deleteMany: ${resource}`, ids);
 
     const promises = ids.map((id) =>
-      apiDataProvider.deleteOne({ resource, id }),
+      apiDataProvider.deleteOne({ resource, id })
     );
     const results = await Promise.all(promises);
 
@@ -245,7 +239,7 @@ export const apiDataProvider: DataProvider = {
     // 处理深度克隆请求
     // URL 格式: /api/styles/:styleId/variants/:variantId/clone
     const cloneMatch = url.match(
-      /\/api\/styles\/(\d+)\/variants\/(\d+)\/clone/,
+      /\/api\/styles\/(\d+)\/variants\/(\d+)\/clone/
     );
 
     if (cloneMatch && method === "post") {

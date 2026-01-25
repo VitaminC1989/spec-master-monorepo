@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { CreateSpecDetailDto, UpdateSpecDetailDto } from './dto';
 import {
@@ -45,6 +45,11 @@ export class SpecDetailsService {
   }
 
   async create(dto: CreateSpecDetailDto) {
+    // 单独创建时 bomItemId 是必填的
+    if (!dto.bomItemId) {
+      throw new BadRequestException('bomItemId 是必填字段');
+    }
+
     const specDetail = await this.prisma.specDetail.create({
       data: {
         bomItemId: dto.bomItemId,

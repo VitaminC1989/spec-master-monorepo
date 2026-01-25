@@ -366,23 +366,195 @@ model OperationLog {
 }
 
 // =============================================================================
+// AUTHENTICATION & AUTHORIZATION (认证与授权)
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// User (用户管理)
+// -----------------------------------------------------------------------------
+/// 用户表，用于系统登录认证和权限控制
+/// 业务规则：
+/// - 用户名全局唯一
+/// - 密码使用 bcrypt 加密存储
+/// - 支持账号锁定机制（登录失败次数限制）
+/// - 支持多设备同时登录
+model User {
+  id Int @id @default(autoincrement())
+
+  // 登录凭证
+  username String @unique @db.VarChar(50) // 用户名（唯一）
+  password String @db.VarChar(255) // bcrypt 哈希密码
+
+  // 基本信息
+  realName String? @map("real_name") @db.VarChar(50) // 真实姓名
+  email    String? @unique @db.VarChar(100) // 邮箱（可选，预留找回密码功能）
+  phone    String? @db.VarChar(20) // 手机号
+  avatar   String? @db.VarChar(500) // 头像URL
+
+  // 状态字段
+  isActive Boolean @default(true) @map("is_active") // 是否启用
+  isLocked Boolean @default(false) @map("is_locked") // 是否锁定（登录失败次数过多）
+
+  // 安全字段
+  lastLoginAt       DateTime? @map("last_login_at") // 最后登录时间
+  lastLoginIp       String?   @map("last_login_ip") @db.VarChar(50) // 最后登录IP
+  passwordChangedAt DateTime? @map("password_changed_at") // 密码修改时间
+  loginFailCount    Int       @default(0) @map("login_fail_count") // 登录失败次数
+  lockedUntil       DateTime? @map("locked_until") // 锁定截止时间
+
+  // 审计字段
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdBy Int?      @map("created_by") // 创建人ID（管理员创建用户）
+  deletedAt DateTime? @map("deleted_at") // 软删除
+
+  // 关联关系
+  userRoles     UserRole[]
+  refreshTokens RefreshToken[]
+
+  @@index([username])
+  @@index([email])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+// -----------------------------------------------------------------------------
+// Role (角色管理)
+// -----------------------------------------------------------------------------
+/// 角色表，用于 RBAC 权限控制
+/// 预设角色：super_admin（超级管理员）、admin（管理员）、user（普通用户）、viewer（只读用户）
+model Role {
+  id Int @id @default(autoincrement())
+
+  // 角色信息
+  roleCode    String  @unique @map("role_code") @db.VarChar(50) // 角色代码（如：admin, user）
+  roleName    String  @map("role_name") @db.VarChar(50) // 角色名称（如：管理员）
+  description String? @db.Text // 角色描述
+  isSystem    Boolean @default(false) @map("is_system") // 是否系统角色（不可删除）
+
+  // 审计字段
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 关联关系
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@index([roleCode])
+  @@map("roles")
+}
+
+// -----------------------------------------------------------------------------
+// UserRole (用户角色关联表)
+// -----------------------------------------------------------------------------
+/// 用户与角色的多对多关联表
+model UserRole {
+  id     Int @id @default(autoincrement())
+  userId Int @map("user_id")
+  roleId Int @map("role_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+// -----------------------------------------------------------------------------
+// Permission (权限管理)
+// -----------------------------------------------------------------------------
+/// 权限表，定义系统中的所有可操作权限
+/// 权限代码格式：{resource}:{action}，如：style:create, customer:read
+model Permission {
+  id Int @id @default(autoincrement())
+
+  // 权限信息
+  permissionCode String  @unique @map("permission_code") @db.VarChar(100) // 权限代码
+  permissionName String  @map("permission_name") @db.VarChar(100) // 权限名称
+  resource       String  @db.VarChar(50) // 资源（style, customer, user）
+  action         String  @db.VarChar(50) // 操作（create, read, update, delete）
+  description    String? @db.Text // 权限描述
+
+  // 审计字段
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // 关联关系
+  rolePermissions RolePermission[]
+
+  @@index([resource])
+  @@index([permissionCode])
+  @@map("permissions")
+}
+
+// -----------------------------------------------------------------------------
+// RolePermission (角色权限关联表)
+// -----------------------------------------------------------------------------
+/// 角色与权限的多对多关联表
+model RolePermission {
+  id           Int @id @default(autoincrement())
+  roleId       Int @map("role_id")
+  permissionId Int @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+// -----------------------------------------------------------------------------
+// RefreshToken (刷新令牌)
+// -----------------------------------------------------------------------------
+/// Refresh Token 表，用于 JWT Token 刷新机制
+/// 业务规则：
+/// - 支持多设备同时登录（一个用户可有多个有效 Refresh Token）
+/// - Token 过期后自动失效
+/// - 登出时撤销对应的 Refresh Token
+model RefreshToken {
+  id Int @id @default(autoincrement())
+
+  userId    Int      @map("user_id")
+  token     String   @unique @db.VarChar(500) // Refresh Token（UUID 或 JWT）
+  expiresAt DateTime @map("expires_at") // 过期时间
+  isRevoked Boolean  @default(false) @map("is_revoked") // 是否已撤销
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// =============================================================================
 // FUTURE CONSIDERATIONS (未来扩展预留)
 // =============================================================================
 //
-// 1. User (用户管理) - 当需要用户认证时添加
-//    - 关联 createdBy, updatedBy 字段
-//    - 支持角色和权限控制
-//
-// 2. Order (订单管理) - 当需要持久化订单数据时添加
+// 1. Order (订单管理) - 当需要持久化订单数据时添加
 //    - 记录下单配置和计算结果
 //    - 支持订单状态追踪
 //
-// 3. MaterialMaster (物料主数据) - 当需要规范化物料时添加
+// 2. MaterialMaster (物料主数据) - 当需要规范化物料时添加
 //    - 统一管理物料信息
 //    - BOMItem 改为外键关联
 //
-// 4. Version (版本控制) - 当需要数据版本管理时添加
+// 3. Version (版本控制) - 当需要数据版本管理时添加
 //    - 支持历史版本回溯
 //    - 变更对比功能
+//
+// 4. Permission (权限管理) - 当需要细粒度权限控制时添加
+//    - 支持资源级权限（如：style:create, customer:read）
+//    - 角色权限关联表
 //
 // =============================================================================
