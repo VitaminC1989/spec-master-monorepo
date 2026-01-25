@@ -35,6 +35,7 @@ import { CustomerDetailPage } from "./pages/customers/detail";
 import { SizeList } from "./pages/sizes/list";
 import { UnitList } from "./pages/units/list";
 import { LoginPage } from "./pages/login";
+import { ProfilePage } from "./pages/profile";
 
 function App() {
   return (
@@ -133,6 +134,9 @@ function App() {
 
                 {/* 单位管理 */}
                 <Route path="/units" element={<UnitList />} />
+
+                {/* 用户中心 */}
+                <Route path="/profile" element={<ProfilePage />} />
               </Route>
 
               {/* 404 页面 */}
