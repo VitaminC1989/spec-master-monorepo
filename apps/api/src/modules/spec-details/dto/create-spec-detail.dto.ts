@@ -9,9 +9,10 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateSpecDetailDto {
-  @ApiProperty({ description: '所属配料明细ID' })
+  @ApiPropertyOptional({ description: '所属配料明细ID（嵌套创建时可省略）' })
+  @IsOptional()
   @IsInt()
-  bomItemId: number;
+  bomItemId?: number;
 
   @ApiPropertyOptional({ description: '尺码', example: 'M' })
   @IsOptional()

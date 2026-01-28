@@ -5,6 +5,7 @@
 
 import { DataProvider } from "@refinedev/core";
 import type { components } from "@spec/types";
+import { getAccessToken } from "./authProvider";
 
 // 定义类型别名
 type CloneVariantResponseDto = components["schemas"]["CloneVariantResponseDto"];
@@ -36,12 +37,20 @@ function getApiPath(resource: string): string {
  * 通用 HTTP 请求封装
  */
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
+  const token = getAccessToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...((options?.headers as Record<string, string>) || {}),
+  };
+
+  // 添加 Authorization 头
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const response = await fetch(url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
+    headers,
   });
 
   if (!response.ok) {
@@ -57,7 +66,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
  */
 export const apiDataProvider: DataProvider = {
   /**
-   * 获取资源列表 - 使用 GET 带查询参数
+   * 获取资源列表 - 使用 GET 请求 + 查询参数
    */
   getList: async ({ resource, filters, pagination, sorters }) => {
     console.log(`[API] getList: ${resource}`, { filters, pagination });
@@ -67,50 +76,33 @@ export const apiDataProvider: DataProvider = {
     // 构建查询参数
     const params = new URLSearchParams();
 
-    // 添加 filters 参数（JSON 编码）
-    if (filters && filters.length > 0) {
-      const filterArray = filters.map((f) => {
-        // 处理 LogicalFilter 和 ConditionalFilter
-        if ("field" in f) {
-          return {
-            field: f.field,
-            operator: f.operator,
-            value: f.value,
-          };
-        }
-        // 处理其他类型的 filter
-        return f;
-      });
-      params.append("filters", JSON.stringify(filterArray));
-    }
-
-    // 添加 pagination 参数（JSON 编码）
+    // 分页参数
     if (pagination) {
-      params.append(
-        "pagination",
-        JSON.stringify({
-          current: pagination.current,
-          pageSize: pagination.pageSize,
-        }),
-      );
+      params.append("current", String(pagination.current || 1));
+      params.append("pageSize", String(pagination.pageSize || 10));
     }
 
-    // 添加 sorters 参数（JSON 编码）
+    // 过滤参数
+    if (filters && filters.length > 0) {
+      filters.forEach((f, index) => {
+        if ("field" in f) {
+          params.append(`filters[${index}][field]`, String(f.field));
+          params.append(`filters[${index}][operator]`, String(f.operator));
+          params.append(`filters[${index}][value]`, String(f.value));
+        }
+      });
+    }
+
+    // 排序参数
     if (sorters && sorters.length > 0) {
-      params.append(
-        "sorters",
-        JSON.stringify(
-          sorters.map((s) => ({
-            field: s.field,
-            order: s.order,
-          })),
-        ),
-      );
+      sorters.forEach((s, index) => {
+        params.append(`sorters[${index}][field]`, String(s.field));
+        params.append(`sorters[${index}][order]`, String(s.order));
+      });
     }
 
-    // 使用 GET 带查询参数
-    const queryString = params.toString();
-    const url = `${API_BASE_URL}/${apiPath}${queryString ? `?${queryString}` : ""}`;
+    // 使用 GET 请求
+    const url = `${API_BASE_URL}/${apiPath}?${params.toString()}`;
     const result = await request<{ data: any[]; total: number }>(url, {
       method: "GET",
     });

@@ -5,6 +5,7 @@
 
 import { Layout as AntLayout, Menu } from "antd";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { UserMenu } from "../UserMenu";
 
 const { Header, Content } = AntLayout;
 
@@ -63,6 +64,9 @@ export const Layout: React.FC = () => {
               style={{ border: 'none', background: 'transparent', minWidth: 500 }}
             />
           </div>
+
+          {/* 用户菜单 */}
+          <UserMenu />
         </div>
       </Header>
 

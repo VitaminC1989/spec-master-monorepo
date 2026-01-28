@@ -296,6 +296,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/storage/presign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 获取预签名上传 URL
+         * @description 生成 S3 预签名 URL，用于前端直传文件到对象存储
+         */
+        post: operations["StorageController_presignUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 用户登录 */
+        post: operations["AuthController_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 刷新 Token */
+        post: operations["AuthController_refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 用户登出 */
+        post: operations["AuthController_logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取当前用户信息 */
+        get: operations["AuthController_getProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -666,8 +754,8 @@ export interface components {
             total: number;
         };
         CreateSpecDetailDto: {
-            /** @description 所属配料明细ID */
-            bomItemId: number;
+            /** @description 所属配料明细ID（嵌套创建时可省略） */
+            bomItemId?: number;
             /**
              * @description 尺码
              * @example M
@@ -748,7 +836,7 @@ export interface components {
             total: number;
         };
         UpdateSpecDetailDto: {
-            /** @description 所属配料明细ID */
+            /** @description 所属配料明细ID（嵌套创建时可省略） */
             bomItemId?: number;
             /**
              * @description 尺码
@@ -912,6 +1000,81 @@ export interface components {
             note?: string;
             /** @description 是否启用 */
             isActive?: boolean;
+        };
+        PresignUploadDto: {
+            /**
+             * @description 文件名
+             * @example sample.jpg
+             */
+            filename: string;
+            /**
+             * @description 文件 MIME 类型
+             * @example image/jpeg
+             */
+            contentType: string;
+            /**
+             * @description 文件大小（字节）
+             * @example 1024000
+             */
+            size: number;
+            /**
+             * @description 文件路径前缀（如 samples, materials, colors）
+             * @example samples
+             */
+            prefix?: string;
+        };
+        PresignUploadResponse: {
+            /**
+             * @description HTTP 方法
+             * @example PUT
+             */
+            method: string;
+            /**
+             * @description 预签名上传 URL
+             * @example https://objectstorageapi.hzh.sealos.run/bucket/key?signature=...
+             */
+            url: string;
+            /**
+             * @description 对象存储 key
+             * @example samples/20260124/1737705600000_abc123.jpg
+             */
+            key: string;
+            /**
+             * @description 公开访问 URL
+             * @example https://objectstorageapi.hzh.sealos.run/bucket/samples/20260124/1737705600000_abc123.jpg
+             */
+            publicUrl: string;
+            /**
+             * @description 上传时必须携带的 HTTP headers
+             * @example {
+             *       "Content-Type": "image/jpeg"
+             *     }
+             */
+            headers: Record<string, never>;
+            /**
+             * @description 预签名 URL 有效期（秒）
+             * @example 900
+             */
+            expiresIn: number;
+        };
+        LoginDto: {
+            /**
+             * @description 用户名
+             * @example admin
+             */
+            username: string;
+            /**
+             * @description 密码
+             * @example admin123
+             */
+            password: string;
+        };
+        RefreshTokenDto: {
+            /**
+             * @description Refresh Token
+             * @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+             */
+            refreshToken: string;
         };
     };
     responses: never;
@@ -1906,6 +2069,117 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description 删除成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StorageController_presignUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PresignUploadDto"];
+            };
+        };
+        responses: {
+            /** @description 成功生成预签名 URL */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PresignUploadResponse"];
+                };
+            };
+            /** @description 请求参数错误（文件类型不支持、文件过大等） */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefreshTokenDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefreshTokenDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_getProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
             200: {
                 headers: {
                     [name: string]: unknown;

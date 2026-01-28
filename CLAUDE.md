@@ -195,8 +195,6 @@ Defined in `turbo.json`:
 - **Frontend**: Fully functional with mock data provider and IndexedDB persistence
 - **Next Steps**: Define Prisma models for the 4-level hierarchy (Style → ColorVariant → BOMItem → SpecDetail) and implement REST endpoints
 
-# 全局配置模板
-
 ## 行为准则与操作协议
 
 ### 第一章：核心交互原则
@@ -478,4 +476,3 @@ python manage.py runserver  # Django
 API 文档用中文编写
 技术文档用中文撰写
 用户指南用中文说明
-此模板由全局 AGENTS.md 配置生成，确保所有项目都使用中文进行开发和交流

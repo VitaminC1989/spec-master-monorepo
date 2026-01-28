@@ -12,7 +12,9 @@
     "docker:build:web:amd64": "bash -c 'docker build --platform linux/amd64 -f Dockerfile.web -t ididiid/spec-web:${1:-latest}-amd64 .' --",
     "docker:push:web:amd64": "bash -c 'docker push ididiid/spec-web:${1:-latest}-amd64' --",
     "docker:deploy:web:amd64": "bash -c 'pnpm docker:build:web:amd64 $1 && pnpm docker:push:web:amd64 $1' --",
-    "start:api:dist": "bash -c 'env $(cat apps/api/.env apps/api/.env.local | grep -v \"^#\" | xargs) node apps/api/dist/src/main.js'"
+    "start:api:dist": "bash -c 'env $(cat apps/api/.env apps/api/.env.local | grep -v \"^#\" | xargs) node apps/api/dist/src/main.js'",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down"
   },
   "keywords": [],
   "author": "",

@@ -3,7 +3,7 @@
  * 负责：配置 Refine 框架、路由、数据提供者、国际化
  */
 
-import { Refine } from "@refinedev/core";
+import { Refine, Authenticated } from "@refinedev/core";
 import routerBindings, {
   NavigateToResource,
   UnsavedChangesNotifier,
@@ -21,6 +21,9 @@ dayjs.locale("zh-cn");
 // 导入 API 数据提供者
 import { apiDataProvider } from "./providers/apiDataProvider";
 
+// 导入认证提供者
+import { authProvider } from "./providers/authProvider";
+
 // 导入布局组件
 import { Layout } from "./components/layouts/Layout";
 
@@ -31,6 +34,8 @@ import { CustomerList } from "./pages/customers/list";
 import { CustomerDetailPage } from "./pages/customers/detail";
 import { SizeList } from "./pages/sizes/list";
 import { UnitList } from "./pages/units/list";
+import { LoginPage } from "./pages/login";
+import { ProfilePage } from "./pages/profile";
 
 function App() {
   return (
@@ -50,6 +55,7 @@ function App() {
           {/* Refine 核心配置 */}
           <Refine
             dataProvider={apiDataProvider}
+            authProvider={authProvider}
             routerProvider={routerBindings}
             resources={[
               {
@@ -95,14 +101,26 @@ function App() {
           >
             {/* 路由配置 */}
             <Routes>
+              {/* 登录页面 - 不需要认证 */}
+              <Route path="/login" element={<LoginPage />} />
+
               {/* 根路径自动跳转到款号列表 */}
               <Route
                 index
                 element={<NavigateToResource resource="styles" />}
               />
 
-              {/* 主布局容器 */}
-              <Route element={<Layout />}>
+              {/* 受保护的路由 - 需要认证 */}
+              <Route
+                element={
+                  <Authenticated
+                    key="authenticated-routes"
+                    fallback={<LoginPage />}
+                  >
+                    <Layout />
+                  </Authenticated>
+                }
+              >
                 {/* 款号管理 */}
                 <Route path="/styles" element={<StyleList />} />
                 <Route path="/styles/:id" element={<StyleDetailPage />} />
@@ -116,6 +134,9 @@ function App() {
 
                 {/* 单位管理 */}
                 <Route path="/units" element={<UnitList />} />
+
+                {/* 用户中心 */}
+                <Route path="/profile" element={<ProfilePage />} />
               </Route>
 
               {/* 404 页面 */}

@@ -11,6 +11,7 @@ import { SpecDetailsModule } from './modules/spec-details/spec-details.module';
 import { SizesModule } from './modules/sizes/sizes.module';
 import { UnitsModule } from './modules/units/units.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { StorageModule } from './modules/storage/storage.module';
     SizesModule,
     UnitsModule,
     StorageModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
