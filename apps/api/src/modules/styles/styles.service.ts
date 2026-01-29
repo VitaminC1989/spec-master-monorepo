@@ -97,12 +97,23 @@ export class StylesService {
       }
     }
 
-    const updateData: any = {
-      styleNo: dto.styleNo,
-      styleName: dto.styleName,
-      publicNote: dto.publicNote,
-    };
+    const updateData: Partial<{
+      styleNo?: string;
+      styleName?: string | null;
+      publicNote?: string | null;
+      customerId?: number | null;
+      customerName?: string | null;
+    }> = {};
 
+    if (dto.styleNo !== undefined) {
+      updateData.styleNo = dto.styleNo;
+    }
+    if (dto.styleName !== undefined) {
+      updateData.styleName = dto.styleName;
+    }
+    if (dto.publicNote !== undefined) {
+      updateData.publicNote = dto.publicNote;
+    }
     if (dto.customerId !== undefined) {
       updateData.customerId = dto.customerId;
       updateData.customerName = customerName;
@@ -150,10 +161,13 @@ export class StylesService {
         });
       }
 
-      // 5. 软删除款号
+      // 5. 软删除款号，同时释放唯一约束
       await tx.style.update({
         where: { id },
-        data: { deletedAt: new Date() },
+        data: {
+          deletedAt: new Date(),
+          styleNo: `${existing.data.styleNo}_DEL_${id}`,
+        },
       });
     });
 

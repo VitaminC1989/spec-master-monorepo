@@ -156,10 +156,13 @@ export class VariantsService {
         data: { deletedAt: new Date() },
       });
 
-      // 3. 软删除颜色版本
+      // 3. 软删除颜色版本，同时释放唯一约束
       await tx.colorVariant.update({
         where: { id },
-        data: { deletedAt: new Date() },
+        data: {
+          deletedAt: new Date(),
+          colorName: `${existing.data.colorName}_DEL_${id}`,
+        },
       });
     });
 
@@ -224,9 +227,7 @@ export class VariantsService {
           styleId,
           colorName: dto.newColorName,
           sampleImageUrl:
-            dto.copySampleImage !== false
-              ? sourceVariant.sampleImageUrl
-              : null,
+            dto.copySampleImage !== false ? sourceVariant.sampleImageUrl : null,
           sizeRange: sourceVariant.sizeRange,
           sortOrder: sourceVariant.sortOrder,
           clonedFromId: variantId,
