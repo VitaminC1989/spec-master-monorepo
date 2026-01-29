@@ -82,15 +82,16 @@ export const apiDataProvider: DataProvider = {
       params.append("pageSize", String(pagination.pageSize || 10));
     }
 
-    // 过滤参数
+    // 过滤参数 - 序列化为 JSON 字符串（后端 ParseFiltersPipe 需要此格式）
     if (filters && filters.length > 0) {
-      filters.forEach((f, index) => {
-        if ("field" in f) {
-          params.append(`filters[${index}][field]`, String(f.field));
-          params.append(`filters[${index}][operator]`, String(f.operator));
-          params.append(`filters[${index}][value]`, String(f.value));
-        }
-      });
+      const filtersArray = filters
+        .filter((f) => "field" in f)
+        .map((f) => ({
+          field: (f as { field: string }).field,
+          operator: (f as { operator: string }).operator,
+          value: (f as { value: unknown }).value,
+        }));
+      params.append("filters", JSON.stringify(filtersArray));
     }
 
     // 排序参数
